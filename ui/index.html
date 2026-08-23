@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DME Care Navigator — demo</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <div>
+      <p class="kicker">Eleanor Martinez · K0001 wheelchair</p>
+      <h1>Care navigation demo</h1>
+      <p id="rec-note" class="rec-note">Replaying the saved Ollama + edge-tts recording (not live).</p>
+    </div>
+    <div class="controls">
+      <button id="play" type="button">Play recording</button>
+      <button id="pause" type="button" disabled>Pause</button>
+      <button id="next" type="button">Next line</button>
+      <span class="speed" role="group" aria-label="Playback speed">
+        <button type="button" class="speed-btn active" data-speed="1">1x</button>
+        <button type="button" class="speed-btn" data-speed="1.5">1.5x</button>
+        <button type="button" class="speed-btn" data-speed="2">2x</button>
+      </span>
+      <span id="stats" class="muted"></span>
+    </div>
+  </header>
+
+  <section class="board" id="board">
+    <article class="party" data-party="navigator">
+      <span class="role">Manager</span>
+      <h2>Navigator</h2>
+      <p>Care advocate agent</p>
+    </article>
+    <article class="party" data-party="clinic">
+      <span class="role">PCP office</span>
+      <h2>Clinic</h2>
+      <p>Sunrise · Dr. Sarah Chen</p>
+    </article>
+    <article class="party" data-party="medicare">
+      <span class="role">Payer</span>
+      <h2>Medicare</h2>
+      <p>Part B coverage check</p>
+    </article>
+    <article class="party" data-party="eleanor">
+      <span class="role">Patient</span>
+      <h2>Eleanor</h2>
+      <p>Original Medicare, no Medigap</p>
+    </article>
+  </section>
+
+  <h3 class="section-label">Suppliers the navigator actually called (this recording)</h3>
+  <section class="suppliers called" id="called"></section>
+  <h3 class="section-label">Rest of directory (not reached after a viable yes)</h3>
+  <section class="suppliers" id="suppliers"></section>
+
+  <section class="stage">
+    <p class="scene" id="scene">Press play to replay the recorded Ollama + voice run.</p>
+    <p class="caption" id="caption"></p>
+  </section>
+
+  <ol class="log" id="log"></ol>
+  <audio id="player"></audio>
+  <script src="/app.js?v=4"></script>
+</body>
+</html>

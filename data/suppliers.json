@@ -1,0 +1,198 @@
+[
+  {
+    "id": "sup_001",
+    "name": "Lakeshore Home Medical Equipment",
+    "phone": "(312) 555-0142",
+    "address": "1820 N Clark St, Chicago, IL 60614",
+    "ground_truth": {
+      "taking_new_medicare": false,
+      "has_k0001": true,
+      "serves_area": true,
+      "delivery_eta_days": null,
+      "behavior": "decline_not_taking_new",
+      "referral": {
+        "name": "Northside CarePlus Equipment",
+        "phone": "(773) 555-0288",
+        "note": "Still accepting Original Medicare manuals"
+      },
+      "notes_for_actor": "Decline new Medicare patients. If asked for alternatives, refer Northside CarePlus Equipment."
+    }
+  },
+  {
+    "id": "sup_002",
+    "name": "Windy City Mobility & DME",
+    "phone": "(312) 555-0177",
+    "address": "435 W Erie St, Chicago, IL 60654",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": false,
+      "serves_area": true,
+      "delivery_eta_days": null,
+      "behavior": "no_stock",
+      "referral": null,
+      "notes_for_actor": "Take Medicare but out of stock on K0001 standard manuals. Offer power chairs only."
+    }
+  },
+  {
+    "id": "sup_003",
+    "name": "Prairie State Medical Supply",
+    "phone": "(773) 555-0211",
+    "address": "3344 N Western Ave, Chicago, IL 60618",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": true,
+      "delivery_eta_days": 7,
+      "behavior": "says_yes_then_evasive",
+      "referral": null,
+      "notes_for_actor": "Sound helpful at first, then get vague on firm ETA / fax intake. Never give a clean commitment."
+    }
+  },
+  {
+    "id": "sup_004",
+    "name": "Northside CarePlus Equipment",
+    "phone": "(773) 555-0288",
+    "address": "5215 N Clark St, Chicago, IL 60640",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": true,
+      "delivery_eta_days": 4,
+      "behavior": "viable",
+      "referral": null,
+      "notes_for_actor": "Solid shop. Medicare yes, K0001 yes, Chicago yes, ~4 business days after written order."
+    }
+  },
+  {
+    "id": "sup_005",
+    "name": "ChicagoLand Durable Medical",
+    "phone": "(312) 555-0301",
+    "address": "900 S Wabash Ave, Chicago, IL 60605",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": false,
+      "delivery_eta_days": null,
+      "behavior": "outside_service_area",
+      "referral": {
+        "name": "Lincoln Park DME Services",
+        "phone": "(312) 555-0468",
+        "note": "Better for near-north deliveries"
+      },
+      "notes_for_actor": "Have stock and take Medicare but do not deliver to Eleanor's near-north address. Refer Lincoln Park DME if asked."
+    }
+  },
+  {
+    "id": "sup_006",
+    "name": "Roosevelt Medical Supply Co",
+    "phone": "(312) 555-0319",
+    "address": "1147 W Roosevelt Rd, Chicago, IL 60608",
+    "ground_truth": {
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "serves_area": true,
+      "delivery_eta_days": null,
+      "behavior": "no_answer",
+      "referral": null,
+      "notes_for_actor": "Nobody available — respond once that front desk is closed / leave a message."
+    }
+  },
+  {
+    "id": "sup_007",
+    "name": "Halsted Home Health Supply",
+    "phone": "(773) 555-0356",
+    "address": "2870 N Halsted St, Chicago, IL 60657",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": true,
+      "delivery_eta_days": 6,
+      "behavior": "viable",
+      "referral": null,
+      "notes_for_actor": "Viable backup. Medicare + K0001 + Chicago, ~6 days after order."
+    }
+  },
+  {
+    "id": "sup_008",
+    "name": "Midwest Mobility Solutions",
+    "phone": "(847) 555-0402",
+    "address": "6601 W Touhy Ave, Niles, IL 60714",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": false,
+      "delivery_eta_days": null,
+      "behavior": "outside_service_area",
+      "referral": {
+        "name": "Halsted Home Health Supply",
+        "phone": "(773) 555-0356",
+        "note": "Closer in-city shop"
+      },
+      "notes_for_actor": "Suburban shop — do not deliver into Eleanor's Chicago zip. Refer Halsted if asked."
+    }
+  },
+  {
+    "id": "sup_009",
+    "name": "Belmont Medical Equipment",
+    "phone": "(773) 555-0447",
+    "address": "3400 W Belmont Ave, Chicago, IL 60618",
+    "ground_truth": {
+      "taking_new_medicare": false,
+      "has_k0001": true,
+      "serves_area": true,
+      "delivery_eta_days": null,
+      "behavior": "decline_not_taking_new",
+      "referral": null,
+      "notes_for_actor": "Not taking new Medicare referrals this month. No referral to give."
+    }
+  },
+  {
+    "id": "sup_010",
+    "name": "Lincoln Park DME Services",
+    "phone": "(312) 555-0468",
+    "address": "2401 N Lincoln Ave, Chicago, IL 60614",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": true,
+      "delivery_eta_days": 3,
+      "behavior": "viable",
+      "referral": null,
+      "notes_for_actor": "Excellent fit. Fast Chicago delivery ~3 days once written order is received."
+    }
+  },
+  {
+    "id": "sup_011",
+    "name": "South Loop Medical Supply",
+    "phone": "(312) 555-0490",
+    "address": "1530 S State St, Chicago, IL 60605",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": false,
+      "serves_area": true,
+      "delivery_eta_days": null,
+      "behavior": "no_stock",
+      "referral": {
+        "name": "ChicagoLand Durable Medical",
+        "phone": "(312) 555-0301",
+        "note": "Sometimes has manuals"
+      },
+      "notes_for_actor": "Out of K0001. May mention ChicagoLand as alternative."
+    }
+  },
+  {
+    "id": "sup_012",
+    "name": "Evanston Home Medical",
+    "phone": "(847) 555-0533",
+    "address": "1700 Central St, Evanston, IL 60201",
+    "ground_truth": {
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "serves_area": false,
+      "delivery_eta_days": null,
+      "behavior": "outside_service_area",
+      "referral": null,
+      "notes_for_actor": "Evanston-only delivery radius. Cannot serve Chicago address."
+    }
+  }
+]

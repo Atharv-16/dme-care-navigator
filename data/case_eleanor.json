@@ -1,0 +1,59 @@
+{
+  "case_id": "eleanor-martinez-wheelchair",
+  "goal": "Get a standard manual wheelchair (HCPCS K0001) delivered for Eleanor under Original Medicare Part B, with written PCP order + enrolled supplier matched.",
+  "status": "intake",
+  "human_needed": false,
+  "escalation": null,
+  "patient": {
+    "name": "Eleanor Martinez",
+    "dob": "1954-03-12",
+    "age": 72,
+    "phone": "(312) 555-0190",
+    "address": "1420 N Cleveland Ave, Chicago, IL 60610",
+    "city": "Chicago, IL",
+    "medicare_mbid": "1EG4-TE5-MK72",
+    "plan": "Original Medicare Part B",
+    "supplemental": false,
+    "coinsurance_explained": false,
+    "reachable": true
+  },
+  "equipment": {
+    "type": "standard_manual_wheelchair",
+    "hcpcs": "K0001",
+    "description": "Standard manual wheelchair",
+    "notes": "PCP visit completed 3 days ago; verbal order noted in chart; written order not yet submitted"
+  },
+  "pcp": {
+    "name": "Dr. Sarah Chen",
+    "clinic": "Sunrise Family Medicine",
+    "phone": "(312) 555-0198",
+    "city": "Chicago, IL",
+    "order_status": "verbal_only",
+    "order": null,
+    "last_contact_at": null,
+    "next_followup_at": null,
+    "chase_attempts": 0,
+    "notes": [
+      "Verbal order documented after visit 3 days ago"
+    ],
+    "ground_truth": {
+      "persona": "clinic_front_desk",
+      "behavior": "needs_two_touches",
+      "notes_for_actor": "First contact: written order never routed — put in Dr. Chen's signature queue. Do not mention suppliers. Second+ contact: confirm signed K0001 order ready for the NAVIGATOR to collect. Clinic never contacts or waits on DME shops."
+    }
+  },
+  "suppliers": [],
+  "selected_supplier_id": null,
+  "delivery": {
+    "status": "not_scheduled",
+    "scheduled_for": null,
+    "notes": null
+  },
+  "patient_updates": [],
+  "event_log": [],
+  "known_facts": {
+    "medicare_coinsurance_pct": 20,
+    "requires_written_order": true,
+    "supplier_must_be_medicare_enrolled": true
+  }
+}

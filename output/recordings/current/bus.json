@@ -1,0 +1,321 @@
+[
+  {
+    "dir": "out",
+    "from": "navigator",
+    "to": "supplier:sup_001",
+    "kind": "availability_check",
+    "body": {
+      "patient": "Eleanor Martinez",
+      "city": "Chicago, IL",
+      "hcpcs": "K0001",
+      "plan": "Original Medicare Part B"
+    }
+  },
+  {
+    "dir": "in",
+    "from": "supplier:sup_001",
+    "to": "navigator",
+    "kind": "availability_check.reply",
+    "body": {
+      "supplier_id": "sup_001",
+      "outcome": "rejected",
+      "fields": {
+        "taking_new_medicare": false,
+        "has_k0001": true,
+        "serves_area": true
+      },
+      "referral_leads": [
+        {
+          "name": "Northside CarePlus Equipment",
+          "phone": "(773) 555-0288",
+          "note": "Still accepting Original Medicare manuals",
+          "source_supplier_id": "sup_001"
+        }
+      ],
+      "summary": "Not taking new Medicare patients",
+      "transcript": [
+        {
+          "speaker": "supplier:sup_001",
+          "text": "Lakeshore Home Medical Equipment, how can I help you?"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Hi, my name is Eleanor Martinez's care navigator. I'm calling to check if you take Original Medicare Part B and have a standard manual wheelchair, code K0001, currently in stock?"
+        },
+        {
+          "speaker": "supplier:sup_001",
+          "text": "We aren't taking new Medicare patients right now."
+        },
+        {
+          "speaker": "navigator",
+          "text": "I understand. Could you please give me the name and phone number of another supplier in the Chicago area who might be able to help us with this?"
+        },
+        {
+          "speaker": "supplier:sup_001",
+          "text": "You can try Northside CarePlus Equipment at (773) 555-0288; they are still accepting Original Medicare manuals. [END]"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Thank you so much for the referral, have a great day! [END]"
+        }
+      ],
+      "llm_extract": {
+        "outcome": "rejected",
+        "fields": {
+          "taking_new_medicare": false,
+          "has_k0001": null,
+          "serves_area": true,
+          "delivery_eta_days": null,
+          "responsive": true
+        },
+        "referral_leads": [
+          {
+            "name": "Northside CarePlus Equipment",
+            "phone": "(773) 555-0288",
+            "note": "Still accepting Original Medicare manuals"
+          }
+        ],
+        "summary": "The supplier stated they are not taking new Medicare patients right now and provided a referral to Northside CarePlus Equipment.",
+        "confidence": 1.0
+      }
+    }
+  },
+  {
+    "dir": "out",
+    "from": "navigator",
+    "to": "clinic",
+    "kind": "chase_written_order",
+    "body": {
+      "patient": "Eleanor Martinez",
+      "dob": "1954-03-12",
+      "hcpcs": "K0001",
+      "current_status": "verbal_only"
+    }
+  },
+  {
+    "dir": "in",
+    "from": "clinic",
+    "to": "navigator",
+    "kind": "chase_written_order.reply",
+    "body": {
+      "outcome": "in_queue",
+      "order_status": "in_queue",
+      "order": null,
+      "summary": "Written order was never routed; now in nurse signature queue.",
+      "transcript": [
+        {
+          "speaker": "clinic",
+          "text": "Sunrise Family Medicine, how can I help you?"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Hi, my name is the care navigator. I'm calling for patient Eleanor Martinez, date of birth March 12, 1954. I'm checking on the written DME order for equipment K0001. Is a signed written K0001 order ready for me to collect?"
+        },
+        {
+          "speaker": "clinic",
+          "text": "It was never routed, so I just placed it in Dr. Chen's signature queue. [END]"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Thank you for your help, goodbye, and [END]."
+        }
+      ]
+    }
+  },
+  {
+    "dir": "out",
+    "from": "navigator",
+    "to": "supplier:sup_004",
+    "kind": "availability_check",
+    "body": {
+      "patient": "Eleanor Martinez",
+      "city": "Chicago, IL",
+      "hcpcs": "K0001",
+      "plan": "Original Medicare Part B"
+    }
+  },
+  {
+    "dir": "in",
+    "from": "supplier:sup_004",
+    "to": "navigator",
+    "kind": "availability_check.reply",
+    "body": {
+      "supplier_id": "sup_004",
+      "outcome": "viable",
+      "fields": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": 4,
+        "responsive": true
+      },
+      "referral_leads": [],
+      "summary": "Viable \u2014 ETA ~4 days after written order",
+      "transcript": [
+        {
+          "speaker": "supplier:sup_004",
+          "text": "Northside CarePlus Equipment, how can I help?"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Hi, my name is Eleanor Martinez's care navigator. I'm calling to see if you are taking new Original Medicare Part B patients."
+        },
+        {
+          "speaker": "supplier:sup_004",
+          "text": "Yes, we are taking new Medicare patients."
+        },
+        {
+          "speaker": "navigator",
+          "text": "Great. Do you have a standard manual wheelchair, a K0001 model, currently in stock?"
+        },
+        {
+          "speaker": "supplier:sup_004",
+          "text": "Yes, we do have the K0001 model in stock."
+        },
+        {
+          "speaker": "navigator",
+          "text": "Wonderful. Can you deliver that to Chicago, and what is the estimated delivery time once a written order is faxed over?"
+        },
+        {
+          "speaker": "supplier:sup_004",
+          "text": "Yes, we serve Chicago, and delivery takes about 4 business days after we get the written order."
+        },
+        {
+          "speaker": "navigator",
+          "text": "That is very helpful to know. Thank you so much for your time and help today. Goodbye. [END]"
+        },
+        {
+          "speaker": "supplier:sup_004",
+          "text": "You're welcome, goodbye! [END]"
+        }
+      ],
+      "llm_extract": {
+        "outcome": "viable",
+        "fields": {
+          "taking_new_medicare": true,
+          "has_k0001": true,
+          "serves_area": true,
+          "delivery_eta_days": 4,
+          "responsive": true
+        },
+        "referral_leads": [],
+        "summary": "The supplier confirmed they are accepting new Medicare patients, currently have a K0001 manual wheelchair in stock, serve the Chicago area, and can deliver within 4 business days of receiving the written order.",
+        "confidence": 1.0
+      }
+    }
+  },
+  {
+    "dir": "out",
+    "from": "navigator",
+    "to": "clinic",
+    "kind": "chase_written_order",
+    "body": {
+      "patient": "Eleanor Martinez",
+      "dob": "1954-03-12",
+      "hcpcs": "K0001",
+      "current_status": "in_queue"
+    }
+  },
+  {
+    "dir": "in",
+    "from": "clinic",
+    "to": "navigator",
+    "kind": "chase_written_order.reply",
+    "body": {
+      "outcome": "received",
+      "order_status": "received",
+      "order": {
+        "signed": true,
+        "signed_at": "2026-08-10",
+        "equipment_text": "standard manual wheelchair",
+        "hcpcs": "K0001",
+        "matches_request": true,
+        "source": "sunrise_family_medicine"
+      },
+      "summary": "Signed written order for K0001 ready for the navigator to take to the supplier.",
+      "transcript": [
+        {
+          "speaker": "clinic",
+          "text": "Sunrise Family Medicine, how can I help you?"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Hi, my name is the Care Navigator, calling on behalf of patient Eleanor Martinez, date of birth March 12, 1954. I'm following up on the written DME order for a K0001 wheelchair. I would like to know if a signed written K0001 order is ready for me to collect."
+        },
+        {
+          "speaker": "clinic",
+          "text": "Yes, Dr. Chen has signed the K0001 written order and it is ready for you to collect. \n\nHave a great day! [END]"
+        },
+        {
+          "speaker": "navigator",
+          "text": "Thank you so much for your help, have a great day! [END]"
+        }
+      ]
+    }
+  },
+  {
+    "dir": "out",
+    "from": "navigator",
+    "to": "medicare",
+    "kind": "coverage_check",
+    "body": {
+      "written_order": true,
+      "order_matches_k0001": true,
+      "supplier_medicare_enrolled": true,
+      "supplier_can_fulfill": true,
+      "hcpcs": "K0001"
+    }
+  },
+  {
+    "dir": "in",
+    "from": "medicare",
+    "to": "navigator",
+    "kind": "coverage_check.reply",
+    "body": {
+      "payable": true,
+      "patient_responsibility": "About 20% coinsurance of the Medicare-approved amount after Part B deductible (no Medigap on file).",
+      "blockers": [],
+      "summary": "Claim would be positioned to pay under Part B DME rules.",
+      "transcript": [
+        {
+          "speaker": "navigator",
+          "text": "Coverage check for Eleanor Martinez, K0001, order=True, supplier_ok=True"
+        },
+        {
+          "speaker": "medicare",
+          "text": "Part B can cover standard manual wheelchair when written order + enrolled supplier align. Result: PAYABLE path \u2014 no blockers. Patient typically owes ~20% coinsurance without Medigap."
+        }
+      ]
+    }
+  },
+  {
+    "dir": "out",
+    "from": "navigator",
+    "to": "eleanor",
+    "kind": "update",
+    "body": {
+      "message": "Hi Eleanor \u2014 Dr. Chen's written order is ready and Northside CarePlus Equipment will deliver your standard manual wheelchair. Under Original Medicare Part B with no Medigap, you typically owe about 20% coinsurance after the Part B deductible. Timing: ~4 business days after order sent."
+    }
+  },
+  {
+    "dir": "in",
+    "from": "eleanor",
+    "to": "navigator",
+    "kind": "update.reply",
+    "body": {
+      "understood": true,
+      "ack": "Okay, thank you for letting me know about the delivery and the twenty percent coinsurance.",
+      "confused": false,
+      "transcript": [
+        {
+          "speaker": "navigator",
+          "text": "Hi Eleanor \u2014 Dr. Chen's written order is ready and Northside CarePlus Equipment will deliver your standard manual wheelchair. Under Original Medicare Part B with no Medigap, you typically owe about 20% coinsurance after the Part B deductible. Timing: ~4 business days after order sent."
+        },
+        {
+          "speaker": "eleanor",
+          "text": "Okay, thank you for letting me know about the delivery and the twenty percent coinsurance."
+        }
+      ]
+    }
+  }
+]

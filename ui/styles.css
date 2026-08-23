@@ -1,0 +1,72 @@
+:root {
+  --bg: #0f1419;
+  --card: #1a222c;
+  --muted: #8b9aab;
+  --text: #eef3f7;
+  --line: #2a3644;
+  --nav: #3b9eff;
+  --clinic: #c084fc;
+  --supplier: #34d399;
+  --medicare: #fbbf24;
+  --eleanor: #fb7185;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; }
+header {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem;
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--line);
+}
+h1 { margin: 0.15rem 0 0; font-size: 1.35rem; }
+.kicker { margin: 0; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+button {
+  background: #243041; color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 0.5rem 0.9rem; cursor: pointer; font-size: 0.9rem;
+}
+button:hover { background: #2c3b4f; }
+button:disabled { opacity: 0.4; cursor: default; }
+#play { background: #1d4ed8; border-color: #2563eb; }
+.muted { color: var(--muted); font-size: 0.8rem; }
+.board {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem;
+  padding: 1rem 1.5rem 0.4rem;
+}
+.rec-note { margin: 0.35rem 0 0; color: #86efac; font-size: 0.85rem; }
+.suppliers.called { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.suppliers.called .party { min-height: 6.2rem; }
+.suppliers {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.55rem;
+  padding: 0 1.5rem 1rem;
+}
+.party.supplier-card { min-height: 5.2rem; padding: 0.7rem; }
+.party.supplier-card h2 { font-size: 0.88rem; line-height: 1.25; }
+.party.idle { opacity: 0.45; }
+.party.on-call:not(.speaking) { border-color: #2a6b52; }
+.speed { display: inline-flex; gap: 0.25rem; margin-left: 0.25rem; }
+.speed-btn.active { background: #14532d; border-color: #22c55e; }
+.party {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 0.9rem; min-height: 7.5rem; transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.party .role { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.party h2 { margin: 0.35rem 0 0.25rem; font-size: 1.05rem; }
+.party p { margin: 0; color: var(--muted); font-size: 0.8rem; }
+.party.speaking { transform: translateY(-3px); }
+.party[data-party="navigator"].speaking { border-color: var(--nav); box-shadow: 0 0 0 3px #3b9eff55; }
+.party[data-party="clinic"].speaking { border-color: var(--clinic); box-shadow: 0 0 0 3px #c084fc55; }
+.party[data-party="supplier"].speaking { border-color: var(--supplier); box-shadow: 0 0 0 3px #34d39955; }
+.party[data-party="medicare"].speaking { border-color: var(--medicare); box-shadow: 0 0 0 3px #fbbf2455; }
+.party[data-party="eleanor"].speaking { border-color: var(--eleanor); box-shadow: 0 0 0 3px #fb718555; }
+.stage { padding: 0 1.5rem 0.5rem; }
+.scene { color: var(--muted); margin: 0 0 0.4rem; font-size: 0.85rem; }
+.caption {
+  margin: 0; min-height: 3.2rem; background: #121920; border: 1px solid var(--line);
+  border-radius: 10px; padding: 0.85rem 1rem; line-height: 1.45;
+}
+.log { list-style: none; margin: 0; padding: 0.5rem 1.5rem 2rem; max-height: 28vh; overflow: auto; }
+.log li { font-size: 0.82rem; color: var(--muted); padding: 0.25rem 0; border-bottom: 1px solid #1c2630; }
+.log li.active { color: var(--text); }
+@media (max-width: 960px) {
+  .board, .suppliers { grid-template-columns: 1fr 1fr; }
+  header { flex-direction: column; align-items: flex-start; }
+}

@@ -1,0 +1,7 @@
+{
+  "captured_at": "2026-08-17T18:46:12.206327+00:00",
+  "dialogue": "gemini",
+  "voice": "edge-tts",
+  "play": false,
+  "note": "Manager-only PCP chase. Replay via python -m src.demo"
+}

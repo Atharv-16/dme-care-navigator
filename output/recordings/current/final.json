@@ -1,0 +1,535 @@
+{
+  "case_id": "eleanor-martinez-wheelchair",
+  "goal": "Get a standard manual wheelchair (HCPCS K0001) delivered for Eleanor under Original Medicare Part B, with written PCP order + enrolled supplier matched.",
+  "status": "completed",
+  "human_needed": false,
+  "escalation": null,
+  "patient": {
+    "name": "Eleanor Martinez",
+    "dob": "1954-03-12",
+    "age": 72,
+    "phone": "(312) 555-0190",
+    "address": "1420 N Cleveland Ave, Chicago, IL 60610",
+    "city": "Chicago, IL",
+    "medicare_mbid": "1EG4-TE5-MK72",
+    "plan": "Original Medicare Part B",
+    "supplemental": false,
+    "coinsurance_explained": true,
+    "reachable": true
+  },
+  "equipment": {
+    "type": "standard_manual_wheelchair",
+    "hcpcs": "K0001",
+    "description": "Standard manual wheelchair",
+    "notes": "PCP visit completed 3 days ago; verbal order noted in chart; written order not yet submitted"
+  },
+  "pcp": {
+    "name": "Dr. Sarah Chen",
+    "clinic": "Sunrise Family Medicine",
+    "phone": "(312) 555-0198",
+    "city": "Chicago, IL",
+    "order_status": "received",
+    "order": {
+      "signed": true,
+      "signed_at": "2026-08-10",
+      "equipment_text": "standard manual wheelchair",
+      "hcpcs": "K0001",
+      "matches_request": true,
+      "source": "sunrise_family_medicine"
+    },
+    "last_contact_at": "2026-08-17T18:46:07.884232+00:00",
+    "next_followup_at": null,
+    "chase_attempts": 2,
+    "notes": [
+      "Verbal order documented after visit 3 days ago",
+      "Written order was never routed; now in nurse signature queue.",
+      "Signed written order for K0001 ready for the navigator to take to the supplier."
+    ],
+    "ground_truth": {
+      "persona": "clinic_front_desk",
+      "behavior": "needs_two_touches",
+      "notes_for_actor": "First contact: written order never routed — put in Dr. Chen's signature queue. Do not mention suppliers. Second+ contact: confirm signed K0001 order ready for the NAVIGATOR to collect. Clinic never contacts or waits on DME shops."
+    }
+  },
+  "suppliers": [
+    {
+      "id": "sup_001",
+      "name": "Lakeshore Home Medical Equipment",
+      "phone": "(312) 555-0142",
+      "address": "1820 N Clark St, Chicago, IL 60614",
+      "priority_score": -9.35,
+      "status": "rejected",
+      "taking_new_medicare": false,
+      "has_k0001": true,
+      "delivery_eta_days": null,
+      "serves_area": true,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 1,
+      "last_contact_at": "2026-08-17T18:44:27.247889+00:00",
+      "next_followup_at": null,
+      "transcript_summary": "Not taking new Medicare patients",
+      "notes": [
+        "Not taking new Medicare patients"
+      ],
+      "ground_truth": {
+        "taking_new_medicare": false,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": null,
+        "behavior": "decline_not_taking_new",
+        "referral": {
+          "name": "Northside CarePlus Equipment",
+          "phone": "(773) 555-0288",
+          "note": "Still accepting Original Medicare manuals"
+        },
+        "notes_for_actor": "Decline new Medicare patients. If asked for alternatives, refer Northside CarePlus Equipment."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_002",
+      "name": "Windy City Mobility & DME",
+      "phone": "(312) 555-0177",
+      "address": "435 W Erie St, Chicago, IL 60654",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": false,
+        "serves_area": true,
+        "delivery_eta_days": null,
+        "behavior": "no_stock",
+        "referral": null,
+        "notes_for_actor": "Take Medicare but out of stock on K0001 standard manuals. Offer power chairs only."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_003",
+      "name": "Prairie State Medical Supply",
+      "phone": "(773) 555-0211",
+      "address": "3344 N Western Ave, Chicago, IL 60618",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": 7,
+        "behavior": "says_yes_then_evasive",
+        "referral": null,
+        "notes_for_actor": "Sound helpful at first, then get vague on firm ETA / fax intake. Never give a clean commitment."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_004",
+      "name": "Northside CarePlus Equipment",
+      "phone": "(773) 555-0288",
+      "address": "5215 N Clark St, Chicago, IL 60640",
+      "priority_score": 9.0,
+      "status": "selected",
+      "taking_new_medicare": true,
+      "has_k0001": true,
+      "delivery_eta_days": 4,
+      "serves_area": true,
+      "responsive": true,
+      "referral_leads": [],
+      "call_attempts": 1,
+      "last_contact_at": "2026-08-17T18:45:47.296814+00:00",
+      "next_followup_at": null,
+      "transcript_summary": "Viable — ETA ~4 days after written order",
+      "notes": [
+        "Still accepting Original Medicare manuals",
+        "Viable — ETA ~4 days after written order"
+      ],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": 4,
+        "behavior": "viable",
+        "referral": null,
+        "notes_for_actor": "Solid shop. Medicare yes, K0001 yes, Chicago yes, ~4 business days after written order."
+      },
+      "from_referral": true
+    },
+    {
+      "id": "sup_005",
+      "name": "ChicagoLand Durable Medical",
+      "phone": "(312) 555-0301",
+      "address": "900 S Wabash Ave, Chicago, IL 60605",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": false,
+        "delivery_eta_days": null,
+        "behavior": "outside_service_area",
+        "referral": {
+          "name": "Lincoln Park DME Services",
+          "phone": "(312) 555-0468",
+          "note": "Better for near-north deliveries"
+        },
+        "notes_for_actor": "Have stock and take Medicare but do not deliver to Eleanor's near-north address. Refer Lincoln Park DME if asked."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_006",
+      "name": "Roosevelt Medical Supply Co",
+      "phone": "(312) 555-0319",
+      "address": "1147 W Roosevelt Rd, Chicago, IL 60608",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": true,
+        "delivery_eta_days": null,
+        "behavior": "no_answer",
+        "referral": null,
+        "notes_for_actor": "Nobody available — respond once that front desk is closed / leave a message."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_007",
+      "name": "Halsted Home Health Supply",
+      "phone": "(773) 555-0356",
+      "address": "2870 N Halsted St, Chicago, IL 60657",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": 6,
+        "behavior": "viable",
+        "referral": null,
+        "notes_for_actor": "Viable backup. Medicare + K0001 + Chicago, ~6 days after order."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_008",
+      "name": "Midwest Mobility Solutions",
+      "phone": "(847) 555-0402",
+      "address": "6601 W Touhy Ave, Niles, IL 60714",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": false,
+        "delivery_eta_days": null,
+        "behavior": "outside_service_area",
+        "referral": {
+          "name": "Halsted Home Health Supply",
+          "phone": "(773) 555-0356",
+          "note": "Closer in-city shop"
+        },
+        "notes_for_actor": "Suburban shop — do not deliver into Eleanor's Chicago zip. Refer Halsted if asked."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_009",
+      "name": "Belmont Medical Equipment",
+      "phone": "(773) 555-0447",
+      "address": "3400 W Belmont Ave, Chicago, IL 60618",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": false,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": null,
+        "behavior": "decline_not_taking_new",
+        "referral": null,
+        "notes_for_actor": "Not taking new Medicare referrals this month. No referral to give."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_010",
+      "name": "Lincoln Park DME Services",
+      "phone": "(312) 555-0468",
+      "address": "2401 N Lincoln Ave, Chicago, IL 60614",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": 3,
+        "behavior": "viable",
+        "referral": null,
+        "notes_for_actor": "Excellent fit. Fast Chicago delivery ~3 days once written order is received."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_011",
+      "name": "South Loop Medical Supply",
+      "phone": "(312) 555-0490",
+      "address": "1530 S State St, Chicago, IL 60605",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": false,
+        "serves_area": true,
+        "delivery_eta_days": null,
+        "behavior": "no_stock",
+        "referral": {
+          "name": "ChicagoLand Durable Medical",
+          "phone": "(312) 555-0301",
+          "note": "Sometimes has manuals"
+        },
+        "notes_for_actor": "Out of K0001. May mention ChicagoLand as alternative."
+      },
+      "from_referral": false
+    },
+    {
+      "id": "sup_012",
+      "name": "Evanston Home Medical",
+      "phone": "(847) 555-0533",
+      "address": "1700 Central St, Evanston, IL 60201",
+      "priority_score": 5.0,
+      "status": "not_contacted",
+      "taking_new_medicare": null,
+      "has_k0001": null,
+      "delivery_eta_days": null,
+      "serves_area": null,
+      "responsive": null,
+      "referral_leads": [],
+      "call_attempts": 0,
+      "last_contact_at": null,
+      "next_followup_at": null,
+      "transcript_summary": null,
+      "notes": [],
+      "ground_truth": {
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": false,
+        "delivery_eta_days": null,
+        "behavior": "outside_service_area",
+        "referral": null,
+        "notes_for_actor": "Evanston-only delivery radius. Cannot serve Chicago address."
+      },
+      "from_referral": false
+    }
+  ],
+  "selected_supplier_id": "sup_004",
+  "delivery": {
+    "status": "scheduled",
+    "scheduled_for": "~4 business days after order sent",
+    "notes": "Matched written order to Northside CarePlus Equipment"
+  },
+  "patient_updates": [
+    {
+      "at": "2026-08-17T18:46:12.201203+00:00",
+      "message": "Hi Eleanor — Dr. Chen's written order is ready and Northside CarePlus Equipment will deliver your standard manual wheelchair. Under Original Medicare Part B with no Medigap, you typically owe about 20% coinsurance after the Part B deductible. Timing: ~4 business days after order sent.",
+      "channel": "phone_mock"
+    }
+  ],
+  "event_log": [
+    {
+      "at": "2026-08-17T18:43:46.351409+00:00",
+      "actor": "world",
+      "action": "boot",
+      "detail": "Loaded case with 12 local supplier agents"
+    },
+    {
+      "at": "2026-08-17T18:43:46.354628+00:00",
+      "actor": "navigator",
+      "action": "decide",
+      "detail": "dispatch_supplier_calls: No viable supplier yet; calling next ranked batch"
+    },
+    {
+      "at": "2026-08-17T18:44:27.247923+00:00",
+      "actor": "supplier",
+      "action": "sup_001:rejected",
+      "detail": "Not taking new Medicare patients"
+    },
+    {
+      "at": "2026-08-17T18:44:47.273114+00:00",
+      "actor": "clinic",
+      "action": "in_queue",
+      "detail": "Written order was never routed; now in nurse signature queue."
+    },
+    {
+      "at": "2026-08-17T18:44:47.275998+00:00",
+      "actor": "navigator",
+      "action": "decide",
+      "detail": "dispatch_supplier_calls: Still hunting for a viable supplier"
+    },
+    {
+      "at": "2026-08-17T18:45:47.296832+00:00",
+      "actor": "supplier",
+      "action": "sup_004:viable",
+      "detail": "Viable — ETA ~4 days after written order"
+    },
+    {
+      "at": "2026-08-17T18:45:47.299021+00:00",
+      "actor": "navigator",
+      "action": "decide",
+      "detail": "dispatch_pcp_chase: Written order status is in_queue; chasing clinic"
+    },
+    {
+      "at": "2026-08-17T18:46:07.884286+00:00",
+      "actor": "clinic",
+      "action": "received",
+      "detail": "Signed written order for K0001 ready for the navigator to take to the supplier."
+    },
+    {
+      "at": "2026-08-17T18:46:07.886630+00:00",
+      "actor": "navigator",
+      "action": "decide",
+      "detail": "request_handoff: Written order ready and at least one viable supplier"
+    },
+    {
+      "at": "2026-08-17T18:46:07.886687+00:00",
+      "actor": "navigator",
+      "action": "handoff",
+      "detail": "Matched written order to Northside CarePlus Equipment"
+    },
+    {
+      "at": "2026-08-17T18:46:09.486042+00:00",
+      "actor": "medicare",
+      "action": "coverage_check",
+      "detail": "Claim would be positioned to pay under Part B DME rules."
+    },
+    {
+      "at": "2026-08-17T18:46:09.488836+00:00",
+      "actor": "navigator",
+      "action": "decide",
+      "detail": "notify_patient: Explain status + ~20% coinsurance"
+    },
+    {
+      "at": "2026-08-17T18:46:12.201307+00:00",
+      "actor": "eleanor",
+      "action": "ack",
+      "detail": "Okay, thank you for letting me know about the delivery and the twenty percent coinsurance."
+    },
+    {
+      "at": "2026-08-17T18:46:12.203820+00:00",
+      "actor": "navigator",
+      "action": "decide",
+      "detail": "complete: Delivery scheduled and patient informed"
+    },
+    {
+      "at": "2026-08-17T18:46:12.203836+00:00",
+      "actor": "navigator",
+      "action": "complete",
+      "detail": "Case completed in local multi-agent world"
+    }
+  ],
+  "known_facts": {
+    "medicare_coinsurance_pct": 20,
+    "requires_written_order": true,
+    "supplier_must_be_medicare_enrolled": true
+  }
+}
