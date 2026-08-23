@@ -19,6 +19,7 @@ from src.agents import (
     PatientAgent,
     SupplierAgent,
 )
+from prompts.loader import hydrate_case, hydrate_suppliers
 from src.bus import Envelope, LocalBus
 from src.llm import llm_provider
 from src.models import (
@@ -77,8 +78,8 @@ class World:
 
     @classmethod
     def load(cls, *, simulate: bool = True, voice: bool = False) -> World:
-        case_data = json.loads((DATA / "case_eleanor.json").read_text())
-        suppliers_data = json.loads((DATA / "suppliers.json").read_text())
+        case_data = hydrate_case(json.loads((DATA / "case_eleanor.json").read_text()))
+        suppliers_data = hydrate_suppliers(json.loads((DATA / "suppliers.json").read_text()))
         case = CaseState.model_validate(case_data)
         case.suppliers = [SupplierRecord.model_validate(s) for s in suppliers_data]
         case.status = "in_progress"

@@ -1,0 +1,14 @@
+{
+  "id": "sup_006",
+  "name": "Roosevelt Medical Supply Co",
+  "persona": "You are staff answering phones at Roosevelt Medical Supply Co, located at 1147 W Roosevelt Rd, Chicago, IL 60608.",
+  "actor_notes": "Nobody available \u2014 respond once that front desk is closed / leave a message.",
+  "knowledge": {
+    "taking_new_medicare": null,
+    "has_k0001": null,
+    "serves_area": true,
+    "delivery_eta_days": null,
+    "behavior": "no_answer",
+    "referral": null
+  }
+}

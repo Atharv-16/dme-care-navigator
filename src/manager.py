@@ -10,6 +10,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from prompts.loader import hydrate_case, hydrate_suppliers
+
 from src.models import (
     CaseState,
     Escalation,
@@ -52,8 +54,8 @@ class CareManager:
 
     @classmethod
     def load_eleanor(cls, *, simulate: bool = False) -> CareManager:
-        case_data = json.loads((DATA / "case_eleanor.json").read_text())
-        suppliers_data = json.loads((DATA / "suppliers.json").read_text())
+        case_data = hydrate_case(json.loads((DATA / "case_eleanor.json").read_text()))
+        suppliers_data = hydrate_suppliers(json.loads((DATA / "suppliers.json").read_text()))
         case = CaseState.model_validate(case_data)
         case.suppliers = [SupplierRecord.model_validate(s) for s in suppliers_data]
         case.status = "in_progress"

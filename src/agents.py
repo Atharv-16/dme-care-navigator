@@ -8,6 +8,18 @@ from src.bus import Envelope, LocalBus
 from src.llm import chat_json, chat_text
 from src.models import CaseState, SupplierRecord
 
+from prompts.clinic import clinic_opener, clinic_self_system
+from prompts.eleanor import eleanor_system
+from prompts.extractors import SUPPLIER_EXTRACTOR
+from prompts.navigator import navigator_clinic_system, navigator_supplier_system
+from prompts.phone import (
+    CALLEE_RULES,
+    CALLER_RULES,
+    GOODBYE_FROM_CALLEE,
+    GOODBYE_FROM_CALLER,
+)
+from prompts.supplier import supplier_opener, supplier_self_system
+
 
 class BaseAgent:
     agent_id: str
@@ -31,18 +43,8 @@ class BaseAgent:
         counterpart_id: str = "navigator",
     ) -> list[dict[str, str]]:
         """Local agent↔agent dialogue. counterpart_id is who the manager-side speaker is."""
-        shape_callee = (
-            "PHONE CALL RULES: First line is a greeting only "
-            "(your organization name + how can I help). "
-            "Do not answer the request, quote inventory, or say [END] on that greeting. "
-            "Wait for the caller. Answer only what they asked. "
-            "When the call is done, one-sentence goodbye then [END]."
-        )
-        shape_caller = (
-            "PHONE CALL RULES: Wait for their greeting. Then identify yourself. "
-            "Ask what you need. Do not [END] on your first speaking turn. "
-            "When you have the answer (or they cannot help), thank them, say goodbye, [END]."
-        )
+        shape_callee = CALLEE_RULES
+        shape_caller = CALLER_RULES
         transcript: list[dict[str, str]] = []
         msgs_self = [
             {"role": "system", "content": self_system + "\n" + shape_callee},
@@ -71,7 +73,7 @@ class BaseAgent:
                         + [
                             {
                                 "role": "user",
-                                "content": "The caller is wrapping up. One-sentence goodbye, then [END].",
+                                "content": GOODBYE_FROM_CALLER,
                             }
                         ],
                         temperature=0.2,
@@ -89,7 +91,7 @@ class BaseAgent:
                         + [
                             {
                                 "role": "user",
-                                "content": "They are saying goodbye. One-sentence goodbye, then [END].",
+                                "content": GOODBYE_FROM_CALLEE,
                             }
                         ],
                         temperature=0.2,
@@ -155,11 +157,7 @@ class PatientAgent(BaseAgent):
                     [
                         {
                             "role": "system",
-                            "content": (
-                                f"You are {self.case.patient.name}, 72, on Original Medicare Part B "
-                                "with no Medigap. Respond as JSON "
-                                '{"understood":true,"ack":"short spoken reply","confused":false}.'
-                            ),
+                            "content": eleanor_system(patient_name=self.case.patient.name),
                         },
                         {"role": "user", "content": msg},
                     ]
@@ -205,45 +203,24 @@ class ClinicAgent(BaseAgent):
             return self._scripted()
 
         # LLM flavor for the conversation; outcome still follows two-touch ground truth
-        gt = self.case.pcp.ground_truth
-        if self.touches == 0:
-            touch_rule = (
-                "FIRST CALL: the written order is NOT signed. Put it in Dr. Chen's "
-                "signature queue. Do not say it is ready."
-            )
-        else:
-            touch_rule = (
-                "FOLLOW-UP CALL: Dr. Chen HAS signed the K0001 written order. "
-                "Tell the navigator it is ready to collect. Do not repeat the first-call story."
-            )
+        gt = dict(self.case.pcp.ground_truth or {})
+        bank_persona = gt.pop("persona", "")
+        bank_notes = gt.pop("notes_for_actor", "")
         transcript = await self._talk(
-            self_system=(
-                f"You are front desk at {self.case.pcp.clinic} for {self.case.pcp.name}. "
-                f"Ground truth: {json.dumps(gt)}. Touches so far: {self.touches}. "
-                f"{touch_rule} "
-                "This call is ONLY with the CARE NAVIGATOR. "
-                "Your job is the written order: unsigned vs in Dr. Chen's signature queue vs signed. "
-                "FORBIDDEN: contacting DME suppliers, waiting on a supplier reply, tracking "
-                "supplier status, ship dates, or carriers. You do NOT route orders to shops. "
-                "When signed, you give the order to the NAVIGATOR; they take it to the supplier. "
-                "If asked about a supplier say: we don't work with the supplier; the navigator does. "
-                "Short replies. Include [END] when done."
+            self_system=clinic_self_system(
+                clinic_name=self.case.pcp.clinic,
+                doctor_name=self.case.pcp.name,
+                ground_truth=gt,
+                touches=self.touches,
+                persona=bank_persona,
+                actor_notes=bank_notes,
             ),
-            other_system=(
-                f"You are the CARE NAVIGATOR (not the patient). You are the only party "
-                f"allowed to contact this clinic. Chase the written DME order for patient "
-                f"{self.case.patient.name}, DOB {self.case.patient.dob}, "
-                f"equipment {self.case.equipment.hcpcs}. "
-                "ONLY ask: is a signed written K0001 order ready for you to collect? "
-                "FORBIDDEN: asking the clinic about supplier status, supplier replies, "
-                "ship dates, carriers, or whether they routed/sent anything to a DME shop. "
-                "The clinic does not talk to suppliers. You already call shops yourself. "
-                "When the order is signed, say you will take it to the supplier. Then [END]."
+            other_system=navigator_clinic_system(
+                patient_name=self.case.patient.name,
+                patient_dob=self.case.patient.dob,
+                hcpcs=self.case.equipment.hcpcs,
             ),
-            opener=(
-                f"The phone rang at {self.case.pcp.clinic}. Pick up. "
-                "Greeting only: clinic name and how can I help. Do not mention the order yet."
-            ),
+            opener=clinic_opener(clinic_name=self.case.pcp.clinic),
             max_turns=4,
             counterpart_id="navigator",
         )
@@ -344,37 +321,23 @@ class SupplierAgent(BaseAgent):
         if self.simulate:
             return self._scripted()
 
-        gt = self.supplier.ground_truth
+        gt = dict(self.supplier.ground_truth or {})
+        persona = gt.pop("persona", "")
+        actor_notes = gt.pop("notes_for_actor", "")
         transcript = await self._talk(
-            self_system=(
-                f"You work the phone at DME supplier {self.supplier.name}. "
-                f"Follow ground truth exactly: {json.dumps(gt)}. Short phone-style replies. "
-                "The caller is a CARE NAVIGATOR, not the patient. "
-                "Do NOT offer to call the patient's doctor, clinic, or PCP. "
-                "You do not chase written orders. If they ask about the doctor, say: "
-                "the navigator handles the PCP; you only need the faxed order later. "
-                "You MAY refer another supplier name/phone if you cannot help. "
-                "If behavior is no_answer, voicemail once and [NO_ANSWER]."
+            self_system=supplier_self_system(
+                supplier_name=self.supplier.name,
+                knowledge=gt,
+                persona=persona,
+                actor_notes=actor_notes,
             ),
-            other_system=(
-                "You are the CARE NAVIGATOR coordinating DME. You are NOT the patient. "
-                f"Never say 'I am {self.case.patient.name}'. Speak as the advocate calling "
-                f"on behalf of {self.case.patient.name} in {self.case.patient.city}, "
-                f"Original Medicare Part B, need {self.case.equipment.description} "
-                f"({self.case.equipment.hcpcs}).\n"
-                "ONLY learn: taking new Medicare? K0001 in stock? deliver to Chicago? ETA "
-                "once a written order is faxed?\n"
-                "If they cannot help, ask for another SUPPLIER referral (name + phone).\n"
-                "FORBIDDEN: asking the supplier to contact Dr. Chen, the clinic, or any PCP. "
-                "You (the navigator) will contact the doctor separately. Do not discuss "
-                "having the shop call the physician.\n"
-                "Keep it to a few short turns. Then thank them and [END]."
+            other_system=navigator_supplier_system(
+                patient_name=self.case.patient.name,
+                patient_city=self.case.patient.city,
+                equipment_description=self.case.equipment.description,
+                hcpcs=self.case.equipment.hcpcs,
             ),
-            opener=(
-                f"The phone rang at {self.supplier.name}. Pick up. "
-                "Greeting only: say the shop name and ask how you can help. "
-                "Do not mention wheelchairs, Medicare, stock, or ETAs until the caller asks."
-            ),
+            opener=supplier_opener(supplier_name=self.supplier.name),
             max_turns=5,
             counterpart_id="navigator",
         )
@@ -387,11 +350,7 @@ class SupplierAgent(BaseAgent):
                 [
                     {
                         "role": "system",
-                        "content": (
-                            "Extract JSON: outcome viable|rejected|callback|no_answer|unclear; "
-                            "fields{taking_new_medicare,has_k0001,serves_area,delivery_eta_days,responsive}; "
-                            "referral_leads[{name,phone,note}]; summary; confidence."
-                        ),
+                        "content": SUPPLIER_EXTRACTOR,
                     },
                     {"role": "user", "content": json.dumps(transcript)},
                 ]
