@@ -19,6 +19,7 @@ from src.agents import (
     PatientAgent,
     SupplierAgent,
 )
+from src.coordinator import compose_patient_reply, init_coordinator_context
 from prompts.loader import hydrate_case, hydrate_suppliers
 from src.bus import Envelope, LocalBus
 from src.llm import llm_provider
@@ -83,6 +84,7 @@ class World:
         case = CaseState.model_validate(case_data)
         case.suppliers = [SupplierRecord.model_validate(s) for s in suppliers_data]
         case.status = "in_progress"
+        init_coordinator_context(case)
         case.log("world", "boot", f"Loaded case with {len(case.suppliers)} local supplier agents")
         return cls(case, simulate=simulate, voice=voice)
 
@@ -454,12 +456,21 @@ class World:
             elif decision.action == "notify_patient":
                 chosen = self.case.get_supplier(self.case.selected_supplier_id or "")
                 name = chosen.name if chosen else "the supplier"
-                msg = (
-                    f"Hi Eleanor — Dr. Chen's written order is ready and {name} will deliver "
-                    f"your standard manual wheelchair. Under Original Medicare Part B with no "
-                    f"Medigap, you typically owe about 20% coinsurance after the Part B deductible. "
-                    f"Timing: {self.case.delivery.scheduled_for}."
+                intent = (
+                    f"Notify patient: Dr. Chen's written order is ready and {name} will deliver "
+                    f"a standard manual wheelchair. Explain Original Medicare Part B ~20% coinsurance "
+                    f"(no Medigap). Delivery timing: {self.case.delivery.scheduled_for}."
                 )
+                if self.simulate:
+                    msg = (
+                        f"Hi Eleanor — Dr. Chen's written order is ready and {name} will deliver "
+                        f"your standard manual wheelchair. Under Original Medicare Part B with no "
+                        f"Medigap, you typically owe about 20% coinsurance after the Part B deductible. "
+                        f"Timing: {self.case.delivery.scheduled_for}."
+                    )
+                else:
+                    composed = await compose_patient_reply(self.case, intent=intent)
+                    msg = composed.get("reply") or intent
                 await self.talk_patient(msg)
             elif decision.action == "complete":
                 self.complete()

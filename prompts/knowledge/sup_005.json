@@ -1,9 +1,8 @@
 {
-  "id": "sup_005",
+  "party": "sup_005",
   "name": "ChicagoLand Durable Medical",
-  "persona": "You are staff answering phones at ChicagoLand Durable Medical, located at 900 S Wabash Ave, Chicago, IL 60605.",
   "actor_notes": "Have stock and take Medicare but do not deliver to Eleanor's near-north address. Refer Lincoln Park DME if asked.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": false,

@@ -1,9 +1,8 @@
 {
-  "id": "sup_009",
+  "party": "sup_009",
   "name": "Belmont Medical Equipment",
-  "persona": "You are staff answering phones at Belmont Medical Equipment, located at 3400 W Belmont Ave, Chicago, IL 60618.",
   "actor_notes": "Not taking new Medicare referrals this month. No referral to give.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": false,
     "has_k0001": true,
     "serves_area": true,

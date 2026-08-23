@@ -1,9 +1,8 @@
 {
-  "id": "sup_003",
+  "party": "sup_003",
   "name": "Prairie State Medical Supply",
-  "persona": "You are staff answering phones at Prairie State Medical Supply, located at 3344 N Western Ave, Chicago, IL 60618.",
   "actor_notes": "Sound helpful at first, then get vague on firm ETA / fax intake. Never give a clean commitment.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": true,

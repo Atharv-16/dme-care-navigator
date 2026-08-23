@@ -1,9 +1,8 @@
 {
-  "id": "sup_004",
+  "party": "sup_004",
   "name": "Northside CarePlus Equipment",
-  "persona": "You are staff answering phones at Northside CarePlus Equipment, located at 5215 N Clark St, Chicago, IL 60640.",
   "actor_notes": "Solid shop. Medicare yes, K0001 yes, Chicago yes, ~4 business days after written order.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": true,

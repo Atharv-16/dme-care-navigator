@@ -153,6 +153,7 @@ class CaseState(BaseModel):
     patient_updates: list[PatientUpdate] = Field(default_factory=list)
     event_log: list[EventLogEntry] = Field(default_factory=list)
     known_facts: dict[str, Any] = Field(default_factory=dict)
+    coordinator_context: list[str] = Field(default_factory=list)
 
     def log(self, actor: str, action: str, detail: str) -> None:
         self.event_log.append(EventLogEntry(actor=actor, action=action, detail=detail))

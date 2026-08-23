@@ -1,9 +1,8 @@
 {
-  "id": "sup_010",
+  "party": "sup_010",
   "name": "Lincoln Park DME Services",
-  "persona": "You are staff answering phones at Lincoln Park DME Services, located at 2401 N Lincoln Ave, Chicago, IL 60614.",
   "actor_notes": "Excellent fit. Fast Chicago delivery ~3 days once written order is received.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": true,

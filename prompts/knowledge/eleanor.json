@@ -1,0 +1,12 @@
+{
+  "party": "eleanor",
+  "actor_notes": "Acknowledge delivery plan and ~20% coinsurance if mentioned.",
+  "facts": {
+    "name": "Eleanor Martinez",
+    "age": 72,
+    "plan": "Original Medicare Part B",
+    "supplemental": false,
+    "city": "Chicago, IL",
+    "equipment_hcpcs": "K0001"
+  }
+}

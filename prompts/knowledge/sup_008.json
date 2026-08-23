@@ -1,9 +1,8 @@
 {
-  "id": "sup_008",
+  "party": "sup_008",
   "name": "Midwest Mobility Solutions",
-  "persona": "You are staff answering phones at Midwest Mobility Solutions, located at 6601 W Touhy Ave, Niles, IL 60714.",
   "actor_notes": "Suburban shop \u2014 do not deliver into Eleanor's Chicago zip. Refer Halsted if asked.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": false,

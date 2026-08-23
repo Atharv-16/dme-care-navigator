@@ -1,9 +1,8 @@
 {
-  "id": "sup_012",
+  "party": "sup_012",
   "name": "Evanston Home Medical",
-  "persona": "You are staff answering phones at Evanston Home Medical, located at 1700 Central St, Evanston, IL 60201.",
   "actor_notes": "Evanston-only delivery radius. Cannot serve Chicago address.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": false,

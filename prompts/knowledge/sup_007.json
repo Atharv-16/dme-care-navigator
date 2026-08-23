@@ -1,9 +1,8 @@
 {
-  "id": "sup_007",
+  "party": "sup_007",
   "name": "Halsted Home Health Supply",
-  "persona": "You are staff answering phones at Halsted Home Health Supply, located at 2870 N Halsted St, Chicago, IL 60657.",
   "actor_notes": "Viable backup. Medicare + K0001 + Chicago, ~6 days after order.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": true,
     "serves_area": true,

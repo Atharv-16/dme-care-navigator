@@ -1,9 +1,8 @@
 {
-  "id": "sup_002",
+  "party": "sup_002",
   "name": "Windy City Mobility & DME",
-  "persona": "You are staff answering phones at Windy City Mobility & DME, located at 435 W Erie St, Chicago, IL 60654.",
   "actor_notes": "Take Medicare but out of stock on K0001 standard manuals. Offer power chairs only.",
-  "knowledge": {
+  "facts": {
     "taking_new_medicare": true,
     "has_k0001": false,
     "serves_area": true,

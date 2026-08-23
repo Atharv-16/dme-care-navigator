@@ -1,24 +1,28 @@
 from __future__ import annotations
 
-import json
 import re
 from typing import Any
 
 from src.bus import Envelope, LocalBus
+from src.coordinator import (
+    GOODBYE_FROM_CALLEE,
+    GOODBYE_FROM_CALLER,
+    analyze_call,
+    append_coordinator_context,
+    compose_patient_reply,
+    conclusion_from_clinic_call,
+    conclusion_from_supplier_call,
+)
 from src.llm import chat_json, chat_text
 from src.models import CaseState, SupplierRecord
 
-from prompts.clinic import clinic_opener, clinic_self_system
-from prompts.eleanor import eleanor_system
-from prompts.extractors import SUPPLIER_EXTRACTOR
-from prompts.navigator import navigator_clinic_system, navigator_supplier_system
-from prompts.phone import (
-    CALLEE_RULES,
-    CALLER_RULES,
-    GOODBYE_FROM_CALLEE,
-    GOODBYE_FROM_CALLER,
+from prompts.loader import (
+    build_system_prompt,
+    clinic_opener,
+    clinic_touch_extra,
+    eleanor_system,
+    supplier_opener,
 )
-from prompts.supplier import supplier_opener, supplier_self_system
 
 
 class BaseAgent:
@@ -43,15 +47,13 @@ class BaseAgent:
         counterpart_id: str = "navigator",
     ) -> list[dict[str, str]]:
         """Local agent↔agent dialogue. counterpart_id is who the manager-side speaker is."""
-        shape_callee = CALLEE_RULES
-        shape_caller = CALLER_RULES
         transcript: list[dict[str, str]] = []
         msgs_self = [
-            {"role": "system", "content": self_system + "\n" + shape_callee},
+            {"role": "system", "content": self_system},
             {"role": "user", "content": opener},
         ]
         msgs_other = [
-            {"role": "system", "content": other_system + "\n" + shape_caller},
+            {"role": "system", "content": other_system},
         ]
 
         self_line = await chat_text(msgs_self, temperature=0.45)
@@ -200,22 +202,25 @@ class ClinicAgent(BaseAgent):
             return {"error": "unsupported"}
 
         if self.simulate:
-            return self._scripted()
+            result = self._scripted()
+            append_coordinator_context(
+                self.case,
+                conclusion_from_clinic_call(self.case, result),
+            )
+            return result
 
-        # LLM flavor for the conversation; outcome still follows two-touch ground truth
-        gt = dict(self.case.pcp.ground_truth or {})
-        bank_persona = gt.pop("persona", "")
-        bank_notes = gt.pop("notes_for_actor", "")
         transcript = await self._talk(
-            self_system=clinic_self_system(
+            self_system=build_system_prompt(
+                "clinic",
+                side="callee",
+                extra=f"Touches so far: {self.touches}.\n{clinic_touch_extra(touches=self.touches)}",
                 clinic_name=self.case.pcp.clinic,
                 doctor_name=self.case.pcp.name,
-                ground_truth=gt,
-                touches=self.touches,
-                persona=bank_persona,
-                actor_notes=bank_notes,
             ),
-            other_system=navigator_clinic_system(
+            other_system=build_system_prompt(
+                "navigator",
+                side="caller",
+                mode="clinic",
                 patient_name=self.case.patient.name,
                 patient_dob=self.case.patient.dob,
                 hcpcs=self.case.equipment.hcpcs,
@@ -224,7 +229,22 @@ class ClinicAgent(BaseAgent):
             max_turns=4,
             counterpart_id="navigator",
         )
-        result = self._scripted()
+        try:
+            await analyze_call(
+                self.case,
+                call_type="clinic",
+                transcript=transcript,
+                counterpart_name=self.case.pcp.clinic,
+            )
+        except Exception as exc:  # noqa: BLE001
+            result = self._scripted()
+            append_coordinator_context(
+                self.case,
+                conclusion_from_clinic_call(self.case, result)
+                + f" | Note: LLM analyze failed ({exc})",
+            )
+        else:
+            result = self._scripted()
         result["transcript"] = transcript
         return result
 
@@ -319,19 +339,23 @@ class SupplierAgent(BaseAgent):
             return {"error": "unsupported"}
         self.attempts += 1
         if self.simulate:
-            return self._scripted()
+            result = self._scripted()
+            append_coordinator_context(
+                self.case,
+                conclusion_from_supplier_call(self.case, self.supplier, result),
+            )
+            return result
 
-        gt = dict(self.supplier.ground_truth or {})
-        persona = gt.pop("persona", "")
-        actor_notes = gt.pop("notes_for_actor", "")
         transcript = await self._talk(
-            self_system=supplier_self_system(
+            self_system=build_system_prompt(
+                self.supplier.id,
+                side="callee",
                 supplier_name=self.supplier.name,
-                knowledge=gt,
-                persona=persona,
-                actor_notes=actor_notes,
             ),
-            other_system=navigator_supplier_system(
+            other_system=build_system_prompt(
+                "navigator",
+                side="caller",
+                mode="supplier",
                 patient_name=self.case.patient.name,
                 patient_city=self.case.patient.city,
                 equipment_description=self.case.equipment.description,
@@ -341,24 +365,26 @@ class SupplierAgent(BaseAgent):
             max_turns=5,
             counterpart_id="navigator",
         )
-        # Prefer ground-truth outcomes for known behaviors so world stays testable.
-        # Optional LLM extract is best-effort (local models often emit invalid JSON).
-        scripted = self._scripted()
-        scripted["transcript"] = transcript
         try:
-            extracted = await chat_json(
-                [
-                    {
-                        "role": "system",
-                        "content": SUPPLIER_EXTRACTOR,
-                    },
-                    {"role": "user", "content": json.dumps(transcript)},
-                ]
+            await analyze_call(
+                self.case,
+                call_type="supplier",
+                transcript=transcript,
+                counterpart_name=self.supplier.name,
+                supplier=self.supplier,
             )
-            scripted["llm_extract"] = extracted
         except Exception as exc:  # noqa: BLE001
-            scripted["llm_extract_error"] = str(exc)
-        return scripted
+            result = self._scripted()
+            append_coordinator_context(
+                self.case,
+                conclusion_from_supplier_call(self.case, self.supplier, result)
+                + f" | Note: LLM analyze failed ({exc})",
+            )
+        else:
+            result = self._scripted()
+        result["transcript"] = transcript
+        result.setdefault("supplier_id", self.supplier.id)
+        return result
 
     def _scripted(self) -> dict[str, Any]:
         gt = self.supplier.ground_truth or {}
