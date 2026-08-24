@@ -1,0 +1,15 @@
+{
+  "party": "sup_004",
+  "name": "Northside CarePlus Equipment",
+  "actor_notes": "Solid shop. Medicare yes, K0001 yes, Chicago yes, ~4 business days after written order.",
+  "facts": {
+    "taking_new_medicare": true,
+    "has_k0001": true,
+    "serves_area": true,
+    "delivery_eta_days": 4,
+    "behavior": "viable",
+    "referral": null
+  },
+  "phone": "(773) 555-0288",
+  "address": "5215 N Clark St, Chicago, IL 60640"
+}

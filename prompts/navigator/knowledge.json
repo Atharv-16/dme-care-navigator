@@ -1,0 +1,16 @@
+{
+  "party": "navigator",
+  "role": "care_coordinator",
+  "actor_notes": "Runtime working memory lives in output/coordinator_context.md and case.coordinator_context. This file stays static.",
+  "facts": {
+    "patient": "Eleanor Martinez",
+    "patient_dob": "1954-03-12",
+    "patient_phone": "(312) 555-0190",
+    "clinic": "Sunrise Family Medicine",
+    "doctor": "Dr. Sarah Chen",
+    "clinic_phone": "(312) 555-0198",
+    "hcpcs": "K0001",
+    "is_patient": false
+  },
+  "context_log": []
+}

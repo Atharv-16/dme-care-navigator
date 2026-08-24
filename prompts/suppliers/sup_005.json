@@ -1,0 +1,19 @@
+{
+  "party": "sup_005",
+  "name": "ChicagoLand Durable Medical",
+  "actor_notes": "Have stock and take Medicare but do not deliver to Eleanor's near-north address. Refer Lincoln Park DME if asked.",
+  "facts": {
+    "taking_new_medicare": true,
+    "has_k0001": true,
+    "serves_area": false,
+    "delivery_eta_days": null,
+    "behavior": "outside_service_area",
+    "referral": {
+      "name": "Lincoln Park DME Services",
+      "phone": "(312) 555-0468",
+      "note": "Better for near-north deliveries"
+    }
+  },
+  "phone": "(312) 555-0301",
+  "address": "900 S Wabash Ave, Chicago, IL 60605"
+}

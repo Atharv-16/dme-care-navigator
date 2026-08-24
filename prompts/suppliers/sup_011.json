@@ -1,0 +1,19 @@
+{
+  "party": "sup_011",
+  "name": "South Loop Medical Supply",
+  "actor_notes": "Out of K0001. May mention ChicagoLand as alternative.",
+  "facts": {
+    "taking_new_medicare": true,
+    "has_k0001": false,
+    "serves_area": true,
+    "delivery_eta_days": null,
+    "behavior": "no_stock",
+    "referral": {
+      "name": "ChicagoLand Durable Medical",
+      "phone": "(312) 555-0301",
+      "note": "Sometimes has manuals"
+    }
+  },
+  "phone": "(312) 555-0490",
+  "address": "1530 S State St, Chicago, IL 60605"
+}

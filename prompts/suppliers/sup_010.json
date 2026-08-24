@@ -1,0 +1,15 @@
+{
+  "party": "sup_010",
+  "name": "Lincoln Park DME Services",
+  "actor_notes": "Excellent fit. Fast Chicago delivery ~3 days once written order is received.",
+  "facts": {
+    "taking_new_medicare": true,
+    "has_k0001": true,
+    "serves_area": true,
+    "delivery_eta_days": 3,
+    "behavior": "viable",
+    "referral": null
+  },
+  "phone": "(312) 555-0468",
+  "address": "2401 N Lincoln Ave, Chicago, IL 60614"
+}

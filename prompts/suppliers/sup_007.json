@@ -1,0 +1,15 @@
+{
+  "party": "sup_007",
+  "name": "Halsted Home Health Supply",
+  "actor_notes": "Viable backup. Medicare + K0001 + Chicago, ~6 days after order.",
+  "facts": {
+    "taking_new_medicare": true,
+    "has_k0001": true,
+    "serves_area": true,
+    "delivery_eta_days": 6,
+    "behavior": "viable",
+    "referral": null
+  },
+  "phone": "(773) 555-0356",
+  "address": "2870 N Halsted St, Chicago, IL 60657"
+}

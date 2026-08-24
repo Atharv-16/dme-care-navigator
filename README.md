@@ -2,9 +2,10 @@
 
 Local **multi-agent** simulation of Medicare DME care coordination for Eleanor’s wheelchair case.
 
-Every party is an in-process agent on a message bus. Default stack is **free**:
+Every party is an in-process agent on a message bus. The default stack is **free**:
 - **Ollama** for LLM dialogue
 - **edge-tts** for spoken playback
+- **Gemini Live native audio** for full-duplex browser calls
 
 ## Agents on the bus
 
@@ -41,6 +42,12 @@ python -m src --llm --voice
 # Speak scripted lines only (no chat LLM)
 python -m src --voice-only-scripted
 
+# Native live voice: impersonate each party the navigator calls in Chrome/Edge.
+# Requires GEMINI_API_KEY. Gemini handles audio, VAD, context, and barge-in.
+python -m src --llm --live-voice
+# open http://127.0.0.1:8766/live.html, then Answer when it rings
+# optional role filter: LIVE_VOICE_ROLES=clinic,suppliers,patient
+
 python -m src --dry-check
 ```
 
@@ -65,6 +72,7 @@ Optional LLM backends in `.env`:
 | Local agent bus | Real in-process |
 | `--llm` dialogue | Real chat via **Ollama**, **Gemini**, or OpenAI |
 | `--voice` | Real **edge-tts** (no key) |
+| `--live-voice` | Real **Gemini Live native audio** with automatic barge-in |
 | Phones / Twilio / portals | Not used |
 
 See `WRITEUP.md` for sequencing, cuts, and what’s next.

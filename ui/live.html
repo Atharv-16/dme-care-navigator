@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Live call, DME Care Navigator</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="live-page">
+  <header>
+    <div>
+      <p class="kicker">Gemini Live · native full-duplex audio</p>
+      <h1 id="title">Waiting for a call</h1>
+      <p id="hint" class="rec-note">You are the other party on this call. The navigator is calling you. Use Chrome or Edge and allow the microphone.</p>
+    </div>
+    <div class="controls">
+      <button id="answer" type="button" disabled>Answer</button>
+      <button id="interrupt" type="button" hidden>Interrupt</button>
+      <button id="hangup" type="button" disabled>Hang up</button>
+      <button id="restart" type="button">Restart navigator</button>
+      <a href="/" class="muted">Replay demo</a>
+    </div>
+  </header>
+
+  <section class="live-status" aria-live="polite">
+    <p id="status" class="scene">Connecting…</p>
+    <div class="mic-panel">
+      <div class="mic-label">
+        <span>Microphone input</span>
+        <div class="mic-feedback">
+          <span class="turn-state idle" id="turnState">Waiting</span>
+          <output id="meterReadout">Waiting for microphone</output>
+        </div>
+      </div>
+      <div
+        class="meter-track"
+        role="meter"
+        aria-label="Microphone input level"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        id="meter"
+      >
+        <div class="meter-fill" id="meterFill"></div>
+        <div class="meter-threshold" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+  <section class="analysis-panel" id="analysisPanel" aria-live="polite" hidden>
+    <span class="analysis-label">Post-call analysis</span>
+    <div class="analysis-tags" id="analysisTags"></div>
+  </section>
+  <ol class="log" id="log"></ol>
+  <p class="scene">Typed fallback:</p>
+  <form id="typebox" class="typebox">
+    <input id="typed" type="text" placeholder="Your spoken line…" autocomplete="off" />
+    <button type="submit">Send</button>
+  </form>
+
+  <section class="party-graph" aria-labelledby="partyGraphTitle">
+    <div class="graph-heading">
+      <div>
+        <p class="kicker">Call orchestration</p>
+        <h2 id="partyGraphTitle">Parties in this case</h2>
+      </div>
+      <p id="activePartyName">Navigator is deciding the next call</p>
+    </div>
+    <svg viewBox="0 0 1000 390" role="img" aria-label="Navigator connected to clinic, patient, Medicare, and DME suppliers">
+      <g class="graph-edges" aria-hidden="true">
+        <line x1="500" y1="195" x2="190" y2="85"></line>
+        <line x1="500" y1="195" x2="190" y2="305"></line>
+        <line x1="500" y1="195" x2="810" y2="85"></line>
+        <line x1="500" y1="195" x2="810" y2="305"></line>
+      </g>
+
+      <g class="graph-node navigator active" data-party-node="navigator" transform="translate(500 195)">
+        <circle r="72"></circle>
+        <text class="node-title" text-anchor="middle" y="-3">Navigator</text>
+        <text class="node-subtitle" text-anchor="middle" y="22">Coordinator</text>
+      </g>
+      <g class="graph-node clinic" data-party-node="clinic" transform="translate(190 85)">
+        <circle r="67"></circle>
+        <text class="node-title" text-anchor="middle" y="-3">Clinic</text>
+        <text class="node-subtitle" text-anchor="middle" y="22">Sunrise</text>
+      </g>
+      <g class="graph-node patient" data-party-node="eleanor" transform="translate(190 305)">
+        <circle r="67"></circle>
+        <text class="node-title" text-anchor="middle" y="-3">Patient</text>
+        <text class="node-subtitle" text-anchor="middle" y="22">Eleanor</text>
+      </g>
+      <g class="graph-node medicare" data-party-node="medicare" transform="translate(810 85)">
+        <circle r="67"></circle>
+        <text class="node-title" text-anchor="middle" y="-3">Medicare</text>
+        <text class="node-subtitle" text-anchor="middle" y="22">Part B</text>
+      </g>
+      <g class="graph-node supplier" data-party-node="supplier" transform="translate(810 305)">
+        <circle r="67"></circle>
+        <text class="node-title" text-anchor="middle" y="-3">Suppliers</text>
+        <text class="node-subtitle" text-anchor="middle" y="22">12 DME shops</text>
+      </g>
+    </svg>
+    <div class="graph-legend">
+      <span><i class="legend-dot active-dot"></i> You are impersonating</span>
+      <span><i class="legend-dot navigator-dot"></i> Navigator is processing</span>
+    </div>
+  </section>
+
+  <script src="/live.js?v=21"></script>
+</body>
+</html>

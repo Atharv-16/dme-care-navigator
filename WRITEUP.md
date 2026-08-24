@@ -22,7 +22,9 @@ The coordination problem is multi-party: patient, PCP clinic, DME suppliers, and
 
 Python, asyncio, Pydantic, Rich.
 **LLM:** Ollama (`llama3.2`) local, or Gemini Flash free tier (`LLM_PROVIDER=gemini`).  
-**Voice:** `edge-tts` (Microsoft neural voices) — free, no API key.
+**Voice:** `edge-tts` for recorded playback. Live browser calls use one
+persistent Gemini Live native-audio session for speech, dialogue, turn
+detection, context, and automatic barge-in.
 
 ```
 navigator ──ask──► supplier agents (parallel in simulate / sequential in LLM)

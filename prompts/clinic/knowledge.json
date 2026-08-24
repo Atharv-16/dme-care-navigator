@@ -1,0 +1,20 @@
+{
+  "party": "clinic",
+  "name": "Sunrise Family Medicine",
+  "doctor": "Dr. Sarah Chen",
+  "phone": "(312) 555-0198",
+  "city": "Chicago, IL",
+  "actor_notes": "First contact on the K0001 written order for Eleanor Martinez: it was never routed; put it in Dr. Chen's signature queue and do not say it is signed. Second+ contact: Dr. Chen has signed the K0001 order; it is ready for whoever is authorized to collect it. Clinic does not contact DME shops or wait on supplier replies.",
+  "facts": {
+    "persona": "clinic_front_desk",
+    "behavior": "needs_two_touches",
+    "clinic": "Sunrise Family Medicine",
+    "doctor": "Dr. Sarah Chen",
+    "phone": "(312) 555-0198",
+    "handles": ["appointments", "messages", "records", "referrals", "prescriptions", "dme_written_orders"]
+  },
+  "touch_rules": {
+    "first": "Written order is NOT signed. Put it in Dr. Chen's signature queue. Do not say it is ready.",
+    "follow_up": "Dr. Chen HAS signed the K0001 written order. It is ready to collect from the clinic."
+  }
+}

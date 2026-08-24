@@ -6,21 +6,46 @@ from pathlib import Path
 from typing import Any
 
 PROMPTS = Path(__file__).resolve().parent
-PERSONAS = PROMPTS / "personas"
-KNOWLEDGE = PROMPTS / "knowledge"
 
 PARTY_IDS = (
-    ["navigator", "eleanor", "clinic", "medicare"]
+    ["navigator", "patient", "clinic", "medicare"]
     + [f"sup_{i:03d}" for i in range(1, 13)]
 )
 
-CALLEE_PHONE_RULES = (
-    "## Phone rules (callee)\n"
-    "- First line: greeting only (your organization name + how can I help).\n"
-    "- Do not answer the request, quote inventory, or say [END] on that greeting.\n"
-    "- Wait for the caller. Answer only what they asked.\n"
-    "- When the call is done: one-sentence goodbye, then [END]."
+NAVIGATOR_JSON = (
+    "Return ONLY valid JSON with keys reply and conclusion: "
+    '{"reply":"spoken words for TTS this turn","conclusion":""}. '
+    "No markdown fences. Put [END] or [NO_ANSWER] inside reply when hanging up. "
+    "On a live phone turn, conclusion is usually empty. "
+    "After a call (analyze), put the self-contained case log in conclusion."
 )
+
+OTHER_JSON = (
+    'Return ONLY valid JSON with one key: {"reply":"spoken words for TTS this turn"}. '
+    "No conclusion key. No markdown fences. "
+    "Put [END] or [NO_ANSWER] inside reply when hanging up."
+)
+
+LIVE_SPOKEN = (
+    "You are on a LIVE PHONE CALL. Output ONLY the words you say out loud. "
+    "Plain spoken English. No JSON. No curly braces. No markdown. "
+    "Keep it to ONE or TWO short sentences. Ask ONE question, then stop and wait. "
+    "Do not dump date of birth, address, and the full case in one breath. "
+    "When the call is actually done, one-sentence goodbye then [END]."
+)
+
+
+def _party_paths(party_id: str) -> tuple[Path, Path]:
+    if party_id in {"eleanor", "patient"}:
+        folder = PROMPTS / "patient"
+        return folder / "persona.md", folder / "knowledge.json"
+    if party_id in {"navigator", "clinic", "medicare"}:
+        folder = PROMPTS / party_id
+        return folder / "persona.md", folder / "knowledge.json"
+    if party_id.startswith("sup_"):
+        return PROMPTS / "suppliers" / f"{party_id}.md", PROMPTS / "suppliers" / f"{party_id}.json"
+    folder = PROMPTS / party_id
+    return folder / "persona.md", folder / "knowledge.json"
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -30,30 +55,32 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def load_persona(party_id: str, *, mode: str | None = None) -> str:
-    """Read prompts/personas/{party_id}.md. Navigator supports mode=clinic|supplier."""
-    path = PERSONAS / f"{party_id}.md"
-    if not path.exists():
+    """Read the party's persona.md. Navigator supports mode=clinic|supplier|analyze."""
+    md_path, _ = _party_paths(party_id)
+    if not md_path.exists():
         return ""
-    text = path.read_text().strip()
-    if party_id == "navigator" and mode:
-        pattern = rf"<!-- mode:{mode} -->\s*(.*?)(?=<!-- mode:|$)"
-        match = re.search(pattern, text, flags=re.S)
-        if match:
-            return match.group(1).strip()
-    # Drop navigator section markers if reading whole file
-    text = re.sub(r"<!-- mode:\w+ -->\s*", "", text)
-    return text.strip()
+    text = md_path.read_text().strip()
+    if party_id == "navigator" and "<!-- mode:" in text:
+        parts = re.split(r"(?=<!-- mode:)", text, maxsplit=1)
+        header = parts[0].strip()
+        rest = parts[1] if len(parts) > 1 else ""
+        sections: dict[str, str] = {}
+        for match in re.finditer(
+            r"<!-- mode:(\w+) -->\s*(.*?)(?=<!-- mode:|$)",
+            rest,
+            flags=re.S,
+        ):
+            sections[match.group(1)] = match.group(2).strip()
+        if mode:
+            body = sections.get(mode, "")
+            return f"{header}\n\n{body}".strip() if body else header
+        return header
+    return text
 
 
 def load_knowledge(party_id: str) -> dict[str, Any]:
-    return _read_json(KNOWLEDGE / f"{party_id}.json")
-
-
-def _format_persona(template: str, ctx: dict[str, Any]) -> str:
-    try:
-        return template.format(**ctx)
-    except KeyError:
-        return template
+    _, json_path = _party_paths(party_id)
+    return _read_json(json_path)
 
 
 def build_system_prompt(
@@ -62,28 +89,47 @@ def build_system_prompt(
     side: str = "callee",
     mode: str | None = None,
     extra: str = "",
-    **ctx: Any,
+    spoken: bool = False,
+    **_ctx: Any,
 ) -> str:
-    """Self-contained system prompt: persona markdown + static knowledge bank only."""
-    persona = _format_persona(load_persona(party_id, mode=mode), ctx)
+    """Self-contained system prompt: persona markdown + static knowledge + output rule."""
+    if (
+        spoken
+        and party_id == "navigator"
+        and mode in {None, "clinic", "live_clinic"}
+    ):
+        live_path = PROMPTS / "navigator" / "live_clinic.md"
+        if live_path.exists():
+            text = live_path.read_text().strip()
+            if extra:
+                text = f"{text}\n\n{extra}"
+            return text
+
+    persona = load_persona(party_id, mode=mode)
     bank = load_knowledge(party_id)
     parts: list[str] = []
+    if spoken:
+        parts.append(LIVE_SPOKEN)
     if persona:
         parts.append(persona)
-    elif side == "callee" and party_id.startswith("sup_"):
-        parts.append(CALLEE_PHONE_RULES)
     if extra:
         parts.append(extra)
     notes = bank.get("actor_notes")
     if notes:
         parts.append(f"Actor guidance: {notes}")
     facts = bank.get("facts")
-    if facts is not None:
+    if facts is not None and not spoken:
         parts.append(f"Ground truth: {json.dumps(facts)}")
+    if spoken:
+        parts.append(LIVE_SPOKEN)
+    elif party_id == "navigator":
+        parts.append(NAVIGATOR_JSON)
+    else:
+        parts.append(OTHER_JSON)
     return "\n\n".join(parts)
 
 
-def clinic_opener(*, clinic_name: str) -> str:
+def clinic_opener(*, clinic_name: str = "Sunrise Family Medicine") -> str:
     return (
         f"The phone rang at {clinic_name}. Pick up. "
         "Greeting only: clinic name and how can I help. Do not mention the order yet."
@@ -141,16 +187,3 @@ def hydrate_case(case_data: dict[str, Any]) -> dict[str, Any]:
     pcp["ground_truth"] = clinic_ground_truth(pcp)
     case_data["pcp"] = pcp
     return case_data
-
-
-def eleanor_system(*, patient_name: str) -> str:
-    persona = load_persona("eleanor")
-    bank = load_knowledge("eleanor")
-    parts = [
-        persona.replace("Eleanor Martinez", patient_name),
-        f"Ground truth: {json.dumps(bank.get('facts', {}))}",
-        'Respond as JSON {"understood":true,"ack":"short spoken reply","confused":false}.',
-    ]
-    if bank.get("actor_notes"):
-        parts.insert(1, f"Actor guidance: {bank['actor_notes']}")
-    return "\n\n".join(parts)

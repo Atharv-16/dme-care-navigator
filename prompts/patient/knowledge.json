@@ -1,0 +1,18 @@
+{
+  "party": "patient",
+  "name": "Eleanor Martinez",
+  "actor_notes": "Answer whoever is calling. If they explain delivery timing or ~20% Part B coinsurance, acknowledge it. If they ask something else, respond as Eleanor.",
+  "facts": {
+    "name": "Eleanor Martinez",
+    "dob": "1954-03-12",
+    "age": 72,
+    "phone": "(312) 555-0190",
+    "address": "1420 N Cleveland Ave, Chicago, IL 60610",
+    "city": "Chicago, IL",
+    "plan": "Original Medicare Part B",
+    "supplemental": false,
+    "equipment_hcpcs": "K0001",
+    "pcp": "Dr. Sarah Chen",
+    "clinic": "Sunrise Family Medicine"
+  }
+}

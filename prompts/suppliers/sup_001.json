@@ -1,0 +1,19 @@
+{
+  "party": "sup_001",
+  "name": "Lakeshore Home Medical Equipment",
+  "actor_notes": "Decline new Medicare patients. If asked for alternatives, refer Northside CarePlus Equipment.",
+  "facts": {
+    "taking_new_medicare": false,
+    "has_k0001": true,
+    "serves_area": true,
+    "delivery_eta_days": null,
+    "behavior": "decline_not_taking_new",
+    "referral": {
+      "name": "Northside CarePlus Equipment",
+      "phone": "(773) 555-0288",
+      "note": "Still accepting Original Medicare manuals"
+    }
+  },
+  "phone": "(312) 555-0142",
+  "address": "1820 N Clark St, Chicago, IL 60614"
+}

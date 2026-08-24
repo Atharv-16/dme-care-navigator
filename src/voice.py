@@ -94,6 +94,20 @@ async def speak_text(
     return out
 
 
+async def synthesize_mp3_bytes(text: str, *, speaker: str = "navigator") -> bytes:
+    """Return mp3 bytes for a live earpiece (browser plays them)."""
+    cleaned = _clean(text)
+    if not cleaned:
+        return b""
+    voice = _voice_for(speaker)
+    chunks: list[bytes] = []
+    communicate = edge_tts.Communicate(cleaned, voice)
+    async for item in communicate.stream():
+        if item["type"] == "audio":
+            chunks.append(item["data"])
+    return b"".join(chunks)
+
+
 async def speak_transcript(
     transcript: list[dict[str, str]],
     *,

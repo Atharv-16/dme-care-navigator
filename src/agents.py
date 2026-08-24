@@ -12,15 +12,15 @@ from src.coordinator import (
     compose_patient_reply,
     conclusion_from_clinic_call,
     conclusion_from_supplier_call,
+    json_turn,
+    live_context_json,
 )
-from src.llm import chat_json, chat_text
 from src.models import CaseState, SupplierRecord
 
 from prompts.loader import (
     build_system_prompt,
     clinic_opener,
     clinic_touch_extra,
-    eleanor_system,
     supplier_opener,
 )
 
@@ -56,21 +56,21 @@ class BaseAgent:
             {"role": "system", "content": other_system},
         ]
 
-        self_line = await chat_text(msgs_self, temperature=0.45)
+        self_line = await json_turn(msgs_self, temperature=0.45)
         self_line = self._strip_early_end(self_line, turn_index=0)
         transcript.append({"speaker": self.agent_id, "text": self_line})
         msgs_self.append({"role": "assistant", "content": self_line})
         msgs_other.append({"role": "user", "content": self_line})
 
         for turn_i in range(max_turns - 1):
-            other_line = await chat_text(msgs_other, temperature=0.5)
+            other_line = await json_turn(msgs_other, temperature=0.5)
             other_line = self._strip_early_end(other_line, turn_index=turn_i)
             transcript.append({"speaker": counterpart_id, "text": other_line})
             msgs_other.append({"role": "assistant", "content": other_line})
             msgs_self.append({"role": "user", "content": other_line})
             if self._is_end(other_line):
                 if not self._is_end(self_line):
-                    close = await chat_text(
+                    close = await json_turn(
                         msgs_self
                         + [
                             {
@@ -82,13 +82,13 @@ class BaseAgent:
                     )
                     transcript.append({"speaker": self.agent_id, "text": close})
                 break
-            self_line = await chat_text(msgs_self, temperature=0.4)
+            self_line = await json_turn(msgs_self, temperature=0.4)
             transcript.append({"speaker": self.agent_id, "text": self_line})
             msgs_self.append({"role": "assistant", "content": self_line})
             msgs_other.append({"role": "user", "content": self_line})
             if self._is_end(self_line):
                 if not any(self._is_end(t["text"]) and t["speaker"] == counterpart_id for t in transcript):
-                    close = await chat_text(
+                    close = await json_turn(
                         msgs_other
                         + [
                             {
@@ -132,8 +132,16 @@ class PatientAgent(BaseAgent):
     agent_id = "eleanor"
     role = "patient"
 
-    def __init__(self, bus: LocalBus, case: CaseState, *, simulate: bool = False):
+    def __init__(
+        self,
+        bus: LocalBus,
+        case: CaseState,
+        *,
+        simulate: bool = False,
+        live_server: Any = None,
+    ):
         self.case = case
+        self.live_server = live_server
         super().__init__(bus, simulate=simulate)
 
     async def handle(self, envelope: Envelope) -> dict[str, Any]:
@@ -141,6 +149,80 @@ class PatientAgent(BaseAgent):
         body = envelope.body
         if kind == "update":
             msg = body.get("message", "")
+            if self.live_server:
+                from src.live_voice import CallSpec
+
+                context = live_context_json(
+                    self.case,
+                    target_id="patient",
+                    target_name=self.case.patient.name,
+                    call_type="patient",
+                    goal="Explain the current case status and confirm understanding.",
+                    facts_to_share=[msg],
+                    questions=["Ask whether the patient understands or has questions."],
+                )
+                result = await self.live_server.run_call(
+                    CallSpec(
+                        role="eleanor",
+                        title="Call for Eleanor Martinez",
+                        human_hint=(
+                            "You are Eleanor Martinez. The care coordinator is calling "
+                            "about your wheelchair. Answer in your own voice."
+                        ),
+                        navigator_system=build_system_prompt(
+                            "navigator",
+                            side="caller",
+                            spoken=True,
+                            extra=f"INPUT_CONTEXT_JSON:\n{context}",
+                        )
+                        + "\nOwn unresolved requests from the patient. If an answer is not "
+                        "supported by context, say that you cannot confirm it yet and that "
+                        "you will follow up. Do not invent facts or delegate the follow-up "
+                        "unless context explicitly says another party has accepted it.",
+                        navigator_speaks_first=True,
+                        first_navigator_line=msg,
+                        max_turns=6,
+                    )
+                )
+                transcript = result.transcript or [
+                    {"speaker": "navigator", "text": msg},
+                ]
+                ack = next(
+                    (t["text"] for t in reversed(transcript) if t.get("speaker") == "eleanor"),
+                    "Okay, thank you.",
+                )
+                analysis: dict[str, Any] | None = None
+                try:
+                    analysis = await analyze_call(
+                        self.case,
+                        call_type="patient",
+                        transcript=transcript,
+                        counterpart_name=self.case.patient.name,
+                        status_callback=(
+                            self.live_server.notify_analysis_status
+                            if self.live_server
+                            else None
+                        ),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    append_coordinator_context(
+                        self.case,
+                        f"Spoke with {self.case.patient.name} at {self.case.patient.phone} | "
+                        f"Live call ended ({result.ended_reason}) | Note: analyze failed ({exc})",
+                    )
+                follow_up = bool(
+                    analysis
+                    and (analysis.get("next_call") or {}).get("action")
+                    in {"call_supplier", "call_clinic", "call_medicare"}
+                )
+                return {
+                    "understood": not follow_up,
+                    "ack": ack,
+                    "confused": follow_up,
+                    "transcript": transcript,
+                    "live": True,
+                    "ended_reason": result.ended_reason,
+                }
             if self.simulate:
                 return {
                     "understood": True,
@@ -155,36 +237,45 @@ class PatientAgent(BaseAgent):
                     ],
                 }
             try:
-                data = await chat_json(
+                ack = await json_turn(
                     [
                         {
                             "role": "system",
-                            "content": eleanor_system(patient_name=self.case.patient.name),
+                            "content": build_system_prompt("patient"),
                         },
                         {"role": "user", "content": msg},
                     ]
                 )
-                ack = data.get("ack") or "Okay, thank you."
-                return {
-                    "understood": bool(data.get("understood", True)),
-                    "ack": ack,
-                    "confused": bool(data.get("confused", False)),
-                    "transcript": [
-                        {"speaker": "navigator", "text": msg},
-                        {"speaker": "eleanor", "text": ack},
-                    ],
-                }
             except Exception:  # noqa: BLE001
                 ack = "Thank you for explaining. I understand I may owe about 20%."
-                return {
-                    "understood": True,
-                    "ack": ack,
-                    "confused": False,
-                    "transcript": [
-                        {"speaker": "navigator", "text": msg},
-                        {"speaker": "eleanor", "text": ack},
-                    ],
-                }
+            transcript = [
+                {"speaker": "navigator", "text": msg},
+                {"speaker": "eleanor", "text": ack},
+            ]
+            try:
+                await analyze_call(
+                    self.case,
+                    call_type="patient",
+                    transcript=transcript,
+                    counterpart_name=self.case.patient.name,
+                    status_callback=(
+                        self.live_server.notify_analysis_status
+                        if self.live_server
+                        else None
+                    ),
+                )
+            except Exception as exc:  # noqa: BLE001
+                append_coordinator_context(
+                    self.case,
+                    f"Spoke with {self.case.patient.name} at {self.case.patient.phone} | "
+                    f"Patient heard: {ack} | Note: analyze failed ({exc})",
+                )
+            return {
+                "understood": True,
+                "ack": ack,
+                "confused": False,
+                "transcript": transcript,
+            }
         return {"error": f"unknown kind {kind}"}
 
 
@@ -192,14 +283,110 @@ class ClinicAgent(BaseAgent):
     agent_id = "clinic"
     role = "pcp_reception"
 
-    def __init__(self, bus: LocalBus, case: CaseState, *, simulate: bool = False):
+    def __init__(
+        self,
+        bus: LocalBus,
+        case: CaseState,
+        *,
+        simulate: bool = False,
+        live_server: Any = None,
+    ):
         self.case = case
         self.touches = 0
+        self.live_server = live_server
         super().__init__(bus, simulate=simulate)
 
     async def handle(self, envelope: Envelope) -> dict[str, Any]:
         if envelope.kind != "chase_written_order":
             return {"error": "unsupported"}
+
+        if self.live_server:
+            from src.live_voice import CallSpec
+
+            context = live_context_json(
+                self.case,
+                target_id="clinic",
+                target_name=self.case.pcp.clinic,
+                call_type="clinic",
+                goal="Confirm whether the signed K0001 written order is ready.",
+                facts_to_share=[
+                    f"Patient: {self.case.patient.name}",
+                    f"Date of birth: {self.case.patient.dob}",
+                    f"Requested equipment: {self.case.equipment.hcpcs}",
+                ],
+                questions=[
+                    "Is the signed written order ready?",
+                    "If not, what is its status and when should we follow up?",
+                ],
+            )
+            live = await self.live_server.run_call(
+                CallSpec(
+                    role="clinic",
+                    title="Sunrise Family Medicine",
+                    human_hint=(
+                        f"You are front desk at Sunrise Family Medicine for Dr. Sarah Chen. "
+                        f"{clinic_touch_extra(touches=self.touches)} "
+                        "Pick up, greet with the clinic name, then answer whatever they ask."
+                    ),
+                    navigator_system=build_system_prompt(
+                        "navigator",
+                        side="caller",
+                        mode="clinic",
+                        spoken=True,
+                        extra=f"INPUT_CONTEXT_JSON:\n{context}",
+                    ),
+                    opener=clinic_opener(),
+                    navigator_speaks_first=False,
+                    max_turns=8,
+                )
+            )
+            transcript = live.transcript
+            if not transcript:
+                result = self._scripted()
+                append_coordinator_context(
+                    self.case,
+                    (
+                        f"Live clinic call ended ({live.ended_reason}) before any "
+                        "conversation was captured."
+                    ),
+                )
+            else:
+                try:
+                    analysis = await analyze_call(
+                        self.case,
+                        call_type="clinic",
+                        transcript=transcript,
+                        counterpart_name=self.case.pcp.clinic,
+                        status_callback=(
+                            self.live_server.notify_analysis_status
+                            if self.live_server
+                            else None
+                        ),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    result = self._scripted()
+                    append_coordinator_context(
+                        self.case,
+                        conclusion_from_clinic_call(self.case, result)
+                        + f" | Note: live analyze failed ({exc})",
+                    )
+                else:
+                    patch = analysis.get("state_patch") or {}
+                    status = patch.get("order_status")
+                    if status:
+                        self.touches += 1
+                        result = {
+                            "outcome": analysis.get("outcome") or status,
+                            "order_status": status,
+                            "order": patch.get("order"),
+                            "summary": analysis.get("summary") or "Clinic call completed.",
+                        }
+                    else:
+                        result = self._scripted()
+            result["transcript"] = transcript
+            result["live"] = True
+            result["ended_reason"] = live.ended_reason
+            return result
 
         if self.simulate:
             result = self._scripted()
@@ -214,18 +401,13 @@ class ClinicAgent(BaseAgent):
                 "clinic",
                 side="callee",
                 extra=f"Touches so far: {self.touches}.\n{clinic_touch_extra(touches=self.touches)}",
-                clinic_name=self.case.pcp.clinic,
-                doctor_name=self.case.pcp.name,
             ),
             other_system=build_system_prompt(
                 "navigator",
                 side="caller",
                 mode="clinic",
-                patient_name=self.case.patient.name,
-                patient_dob=self.case.patient.dob,
-                hcpcs=self.case.equipment.hcpcs,
             ),
-            opener=clinic_opener(clinic_name=self.case.pcp.clinic),
+            opener=clinic_opener(),
             max_turns=4,
             counterpart_id="navigator",
         )
@@ -235,6 +417,11 @@ class ClinicAgent(BaseAgent):
                 call_type="clinic",
                 transcript=transcript,
                 counterpart_name=self.case.pcp.clinic,
+                status_callback=(
+                    self.live_server.notify_analysis_status
+                    if self.live_server
+                    else None
+                ),
             )
         except Exception as exc:  # noqa: BLE001
             result = self._scripted()
@@ -327,11 +514,13 @@ class SupplierAgent(BaseAgent):
         case: CaseState,
         *,
         simulate: bool = False,
+        live_server: Any = None,
     ):
         self.agent_id = f"supplier:{supplier.id}"
         self.supplier = supplier
         self.case = case
         self.attempts = 0
+        self.live_server = live_server
         super().__init__(bus, simulate=simulate)
 
     async def handle(self, envelope: Envelope) -> dict[str, Any]:
@@ -346,20 +535,117 @@ class SupplierAgent(BaseAgent):
             )
             return result
 
+        if self.live_server:
+            from src.live_voice import CallSpec
+
+            context = live_context_json(
+                self.case,
+                target_id=self.supplier.id,
+                target_name=self.supplier.name,
+                call_type="supplier",
+                goal="Determine whether this supplier can fulfill the K0001 request.",
+                facts_to_share=[
+                    f"Coverage: {self.case.patient.plan}",
+                    f"Equipment: {self.case.equipment.hcpcs} {self.case.equipment.description}",
+                    f"Delivery city: {self.case.patient.city}",
+                ],
+                questions=[
+                    "Are you accepting new Original Medicare patients?",
+                    "Is K0001 in stock?",
+                    f"Do you deliver to {self.case.patient.city}?",
+                    "What is the ETA after receiving the written order?",
+                ],
+            )
+            live = await self.live_server.run_call(
+                CallSpec(
+                    role=self.agent_id,
+                    title=self.supplier.name,
+                    human_hint=(
+                        f"You are answering for {self.supplier.name} at "
+                        f"{self.supplier.phone}. Act as the DME supplier representative. "
+                        "Greet with the business name, then answer the navigator."
+                    ),
+                    navigator_system=build_system_prompt(
+                        "navigator",
+                        side="caller",
+                        mode="supplier",
+                        spoken=True,
+                        extra=f"INPUT_CONTEXT_JSON:\n{context}",
+                    ),
+                    opener=supplier_opener(supplier_name=self.supplier.name),
+                    navigator_speaks_first=False,
+                    max_turns=8,
+                )
+            )
+            transcript = live.transcript
+            result = self._scripted()
+            if transcript:
+                try:
+                    analysis = await analyze_call(
+                        self.case,
+                        call_type="supplier",
+                        transcript=transcript,
+                        counterpart_name=self.supplier.name,
+                        supplier=self.supplier,
+                        status_callback=(
+                            self.live_server.notify_analysis_status
+                            if self.live_server
+                            else None
+                        ),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    append_coordinator_context(
+                        self.case,
+                        conclusion_from_supplier_call(
+                            self.case,
+                            self.supplier,
+                            result,
+                        )
+                        + f" | Note: live analyze failed ({exc})",
+                    )
+                else:
+                    patch = analysis.get("state_patch") or {}
+                    outcome = patch.get("supplier_outcome") or analysis.get("outcome")
+                    if outcome in {
+                        "viable",
+                        "rejected",
+                        "callback",
+                        "no_answer",
+                        "voicemail",
+                        "unclear",
+                    }:
+                        result = {
+                            "supplier_id": self.supplier.id,
+                            "outcome": outcome,
+                            "fields": patch.get("supplier_fields") or {},
+                            "referral_leads": patch.get("referral_leads") or [],
+                            "summary": analysis.get("summary") or "Supplier call completed.",
+                            "confidence": 0.8,
+                        }
+            else:
+                append_coordinator_context(
+                    self.case,
+                    (
+                        f"Live supplier call to {self.supplier.name} at "
+                        f"{self.supplier.phone} ended ({live.ended_reason}) before "
+                        "any conversation was captured."
+                    ),
+                )
+            result["transcript"] = transcript
+            result["live"] = True
+            result["ended_reason"] = live.ended_reason
+            result.setdefault("supplier_id", self.supplier.id)
+            return result
+
         transcript = await self._talk(
             self_system=build_system_prompt(
                 self.supplier.id,
                 side="callee",
-                supplier_name=self.supplier.name,
             ),
             other_system=build_system_prompt(
                 "navigator",
                 side="caller",
                 mode="supplier",
-                patient_name=self.case.patient.name,
-                patient_city=self.case.patient.city,
-                equipment_description=self.case.equipment.description,
-                hcpcs=self.case.equipment.hcpcs,
             ),
             opener=supplier_opener(supplier_name=self.supplier.name),
             max_turns=5,
@@ -372,6 +658,11 @@ class SupplierAgent(BaseAgent):
                 transcript=transcript,
                 counterpart_name=self.supplier.name,
                 supplier=self.supplier,
+                status_callback=(
+                    self.live_server.notify_analysis_status
+                    if self.live_server
+                    else None
+                ),
             )
         except Exception as exc:  # noqa: BLE001
             result = self._scripted()
@@ -531,13 +822,21 @@ class SupplierAgent(BaseAgent):
 
 
 class MedicareAgent(BaseAgent):
-    """Local Medicare rules oracle — validates claim readiness (not a phone call)."""
+    """Medicare Part B rules oracle, optionally represented by a live human."""
 
     agent_id = "medicare"
     role = "medicare_part_b"
 
-    def __init__(self, bus: LocalBus, case: CaseState, *, simulate: bool = False):
+    def __init__(
+        self,
+        bus: LocalBus,
+        case: CaseState,
+        *,
+        simulate: bool = False,
+        live_server: Any = None,
+    ):
         self.case = case
+        self.live_server = live_server
         super().__init__(bus, simulate=simulate)
 
     async def handle(self, envelope: Envelope) -> dict[str, Any]:
@@ -563,7 +862,7 @@ class MedicareAgent(BaseAgent):
             blockers.append("unexpected_hcpcs")
 
         payable = len(blockers) == 0
-        return {
+        result = {
             "payable": payable,
             "patient_responsibility": (
                 "About 20% coinsurance of the Medicare-approved amount after Part B deductible "
@@ -593,3 +892,70 @@ class MedicareAgent(BaseAgent):
                 },
             ],
         }
+        if self.live_server:
+            from src.live_voice import CallSpec
+
+            context = live_context_json(
+                self.case,
+                target_id="medicare",
+                target_name="Medicare Part B",
+                call_type="medicare",
+                goal="Verify coverage readiness and patient responsibility.",
+                facts_to_share=[
+                    f"HCPCS: {code}",
+                    f"Matching written order: {has_order and order_ok}",
+                    f"Supplier enrolled and viable: {supplier_enrolled and supplier_viable}",
+                ],
+                questions=[
+                    "Is the coverage path ready?",
+                    "What patient coinsurance should be explained?",
+                ],
+            )
+            question = (
+                f"I'm calling about Part B coverage readiness for {self.case.patient.name}, "
+                f"HCPCS {code}. We have a matching written order: {has_order}. "
+                f"The selected supplier is enrolled and able to fulfill: {supplier_viable}. "
+                "Can you confirm the coverage path and patient responsibility?"
+            )
+            live = await self.live_server.run_call(
+                CallSpec(
+                    role="medicare",
+                    title="Medicare Part B",
+                    human_hint=(
+                        "You are a Medicare Part B representative. Answer the care "
+                        "coordinator's coverage-readiness questions."
+                    ),
+                    navigator_system=(
+                        build_system_prompt(
+                            "navigator",
+                            side="caller",
+                            spoken=True,
+                            extra=f"INPUT_CONTEXT_JSON:\n{context}",
+                        )
+                        + "\nYou are calling a Medicare Part B representative to verify "
+                        "coverage readiness and patient coinsurance."
+                    ),
+                    navigator_speaks_first=True,
+                    first_navigator_line=question,
+                    max_turns=8,
+                )
+            )
+            result["transcript"] = live.transcript
+            result["live"] = True
+            result["ended_reason"] = live.ended_reason
+            if live.transcript:
+                try:
+                    result["analysis"] = await analyze_call(
+                        self.case,
+                        call_type="medicare",
+                        transcript=live.transcript,
+                        counterpart_name="Medicare Part B",
+                        status_callback=self.live_server.notify_analysis_status,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    append_coordinator_context(
+                        self.case,
+                        f"Spoke with Medicare Part B | Live call ended "
+                        f"({live.ended_reason}) | Note: analyze failed ({exc})",
+                    )
+        return result

@@ -9,6 +9,7 @@ from src.ranking import exhausted_suppliers, next_supplier_batch, viable_supplie
 Action = Literal[
     "dispatch_supplier_calls",
     "dispatch_pcp_chase",
+    "call_medicare",
     "request_handoff",
     "notify_patient",
     "escalate",
@@ -108,3 +109,45 @@ def decide(case: CaseState, *, max_parallel: int = 2) -> Decision:
         return Decision("escalate", "Order ready but supplier network exhausted")
 
     return Decision("escalate", "No actionable path without human judgment")
+
+
+def decision_from_plan(case: CaseState) -> Decision | None:
+    """Validate an LLM call plan before allowing it to drive orchestration."""
+    plan = case.next_call_plan
+    if plan is None:
+        return None
+
+    if plan.action == "call_clinic" and plan.target_id in {None, "clinic"}:
+        return Decision("dispatch_pcp_chase", plan.reason or plan.goal)
+
+    if plan.action == "call_supplier" and plan.target_id:
+        supplier = case.get_supplier(plan.target_id)
+        if supplier and supplier.status != "rejected":
+            return Decision(
+                "dispatch_supplier_calls",
+                plan.reason or plan.goal,
+                supplier_ids=[supplier.id],
+            )
+
+    if plan.action == "call_patient" and plan.target_id in {None, "patient", "eleanor"}:
+        return Decision("notify_patient", plan.reason or plan.goal)
+
+    if plan.action == "call_medicare" and plan.target_id in {None, "medicare"}:
+        return Decision("call_medicare", plan.reason or plan.goal)
+
+    if plan.action == "handoff":
+        supplier = case.get_supplier(plan.target_id or case.selected_supplier_id or "")
+        if supplier and supplier.status in {"viable", "selected"}:
+            return Decision(
+                "request_handoff",
+                plan.reason or plan.goal,
+                supplier_ids=[supplier.id],
+            )
+
+    if plan.action == "complete":
+        return Decision("complete", plan.reason or "Planner confirmed completion")
+
+    if plan.action == "escalate":
+        return Decision("escalate", plan.reason or "Planner requested human review")
+
+    return None

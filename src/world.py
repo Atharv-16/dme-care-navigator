@@ -19,7 +19,7 @@ from src.agents import (
     PatientAgent,
     SupplierAgent,
 )
-from src.coordinator import compose_patient_reply, init_coordinator_context
+from src.coordinator import compose_patient_reply, init_coordinator_context, persist_context
 from prompts.loader import hydrate_case, hydrate_suppliers
 from src.bus import Envelope, LocalBus
 from src.llm import llm_provider
@@ -33,7 +33,7 @@ from src.models import (
     WrittenOrder,
     utc_now,
 )
-from src.policy import decide
+from src.policy import decide, decision_from_plan
 from src.ranking import rank_suppliers, viable_suppliers
 
 console = Console()
@@ -54,10 +54,22 @@ class World:
       - supplier:<id> for every directory row
     """
 
-    def __init__(self, case: CaseState, *, simulate: bool = True, voice: bool = False):
+    def __init__(self, case: CaseState, *, simulate: bool = True, voice: bool = False, live_voice: bool = False):
         self.case = case
         self.simulate = simulate
         self.voice = voice
+        self.live_voice = live_voice
+        self.live_server = None
+        self.live_roles: set[str] = set()
+        if live_voice:
+            from src.live_voice import LiveVoiceServer
+
+            self.live_server = LiveVoiceServer()
+            self.live_roles = {
+                x.strip()
+                for x in os.getenv("LIVE_VOICE_ROLES", "all").split(",")
+                if x.strip()
+            }
         self.bus = LocalBus()
         self.max_parallel = int(os.getenv("MAX_PARALLEL_CALLS", "2"))
         self.max_steps = int(os.getenv("MAX_MANAGER_STEPS", "14"))
@@ -69,16 +81,44 @@ class World:
             os.environ["DME_AUDIO_DIR"] = str(rec_audio)
 
         self.navigator = NavigatorAgent(self.bus, case, simulate=simulate)
-        self.patient = PatientAgent(self.bus, case, simulate=simulate)
-        self.clinic = ClinicAgent(self.bus, case, simulate=simulate)
-        self.medicare = MedicareAgent(self.bus, case, simulate=simulate)
+        all_live = "all" in self.live_roles
+        clinic_live = self.live_server if all_live or "clinic" in self.live_roles else None
+        patient_live = (
+            self.live_server
+            if all_live or "patient" in self.live_roles or "eleanor" in self.live_roles
+            else None
+        )
+        medicare_live = (
+            self.live_server if all_live or "medicare" in self.live_roles else None
+        )
+        self.patient = PatientAgent(self.bus, case, simulate=simulate, live_server=patient_live)
+        self.clinic = ClinicAgent(self.bus, case, simulate=simulate, live_server=clinic_live)
+        self.medicare = MedicareAgent(
+            self.bus,
+            case,
+            simulate=simulate,
+            live_server=medicare_live,
+        )
         self.supplier_agents: dict[str, SupplierAgent] = {}
         for s in case.suppliers:
-            ag = SupplierAgent(self.bus, s, case, simulate=simulate)
+            ag = SupplierAgent(
+                self.bus,
+                s,
+                case,
+                simulate=simulate,
+                live_server=(
+                    self.live_server
+                    if all_live
+                    or "supplier" in self.live_roles
+                    or "suppliers" in self.live_roles
+                    or s.id in self.live_roles
+                    else None
+                ),
+            )
             self.supplier_agents[s.id] = ag
 
     @classmethod
-    def load(cls, *, simulate: bool = True, voice: bool = False) -> World:
+    def load(cls, *, simulate: bool = True, voice: bool = False, live_voice: bool = False) -> World:
         case_data = hydrate_case(json.loads((DATA / "case_eleanor.json").read_text()))
         suppliers_data = hydrate_suppliers(json.loads((DATA / "suppliers.json").read_text()))
         case = CaseState.model_validate(case_data)
@@ -86,7 +126,7 @@ class World:
         case.status = "in_progress"
         init_coordinator_context(case)
         case.log("world", "boot", f"Loaded case with {len(case.suppliers)} local supplier agents")
-        return cls(case, simulate=simulate, voice=voice)
+        return cls(case, simulate=simulate, voice=voice, live_voice=live_voice)
 
     def _emit(self, msg: str) -> None:
         console.print(f"[bold cyan]NAVIGATOR[/bold cyan] {msg}")
@@ -136,7 +176,18 @@ class World:
                     existing.notes.append(lead.note)
                 if existing.id not in self.supplier_agents:
                     self.supplier_agents[existing.id] = SupplierAgent(
-                        self.bus, existing, self.case, simulate=self.simulate
+                        self.bus,
+                        existing,
+                        self.case,
+                        simulate=self.simulate,
+                        live_server=(
+                            self.live_server
+                            if "all" in self.live_roles
+                            or "supplier" in self.live_roles
+                            or "suppliers" in self.live_roles
+                            or existing.id in self.live_roles
+                            else None
+                        ),
                     )
                 self._emit(f"Referral already in directory → call {existing.name} next")
                 return
@@ -161,7 +212,18 @@ class World:
         )
         self.case.suppliers.append(record)
         self.supplier_agents[new_id] = SupplierAgent(
-            self.bus, record, self.case, simulate=self.simulate
+            self.bus,
+            record,
+            self.case,
+            simulate=self.simulate,
+            live_server=(
+                self.live_server
+                if "all" in self.live_roles
+                or "supplier" in self.live_roles
+                or "suppliers" in self.live_roles
+                or new_id in self.live_roles
+                else None
+            ),
         )
         self.case.log("navigator", "add_lead", f"Registered new supplier agent {record.name}")
         self._emit(f"Spawned supplier agent for lead → {record.name}")
@@ -171,6 +233,7 @@ class World:
         supplier = self.case.get_supplier(sid) if sid else None
         if not supplier:
             return
+        was_selected = self.case.selected_supplier_id == sid
         result = SupplierCallResult(
             supplier_id=sid,
             outcome=raw.get("outcome") or "unclear",
@@ -203,7 +266,9 @@ class World:
         supplier.transcript_summary = result.summary
         supplier.notes.append(result.summary)
 
-        if result.outcome == "viable":
+        if was_selected and result.outcome != "rejected":
+            supplier.status = "selected"
+        elif result.outcome == "viable":
             supplier.status = "viable"
         elif result.outcome == "rejected":
             supplier.status = "rejected"
@@ -231,7 +296,8 @@ class World:
             s = self.case.get_supplier(sid)
             if not s:
                 continue
-            s.status = "calling"
+            if s.status != "selected":
+                s.status = "calling"
             names.append(s.name)
             envelopes.append(
                 Envelope(
@@ -269,6 +335,9 @@ class World:
                 f"  [green]✓[/green] {raw.get('supplier_id')} → [bold]{raw.get('outcome')}[/bold] "
                 f"— {raw.get('summary')}"
             )
+            if self.live_voice and decision_from_plan(self.case) is not None:
+                self._emit("Post-call planner selected the next action")
+                break
 
     async def talk_clinic(self) -> None:
         self._emit("Messaging clinic reception agent")
@@ -324,7 +393,7 @@ class World:
         self.case.log("medicare", "coverage_check", raw.get("summary", ""))
         return raw
 
-    async def talk_patient(self, message: str) -> None:
+    async def talk_patient(self, message: str) -> dict:
         raw = await self.bus.ask(
             Envelope(
                 sender="navigator",
@@ -336,8 +405,9 @@ class World:
         self._print_transcript("Local talk — Eleanor", raw.get("transcript") or [])
         await self._maybe_speak("eleanor", raw.get("transcript") or [])
         self.case.patient_updates.append(PatientUpdate(message=message))
-        self.case.patient.coinsurance_explained = True
+        self.case.patient.coinsurance_explained = bool(raw.get("understood"))
         self.case.log("eleanor", "ack", raw.get("ack", ""))
+        return raw
 
     def handoff(self, supplier_id: str | None = None) -> None:
         viables = viable_suppliers(self.case)
@@ -408,11 +478,23 @@ class World:
         return path
 
     async def run(self) -> CaseState:
+        if self.live_server:
+            await self.live_server.start()
+        try:
+            return await self._run_loop()
+        finally:
+            if self.live_server:
+                await self.live_server.stop()
+
+    async def _run_loop(self) -> CaseState:
+        extra = ""
+        if self.live_server:
+            extra = f"\nLive earpiece: {self.live_server.url}"
         console.print(
             Panel.fit(
                 f"[bold]Local multi-agent world[/bold]\n"
                 f"Patient: {self.case.patient.name}\n"
-                f"Agents online: {', '.join(self.bus.agents())}",
+                f"Agents online: {', '.join(self.bus.agents())}{extra}",
                 title="DME Care Navigator",
                 border_style="bright_white",
             )
@@ -420,7 +502,22 @@ class World:
 
         for step in range(1, self.max_steps + 1):
             console.rule(f"Navigator step {step}")
-            decision = decide(self.case, max_parallel=self.max_parallel)
+            had_plan = self.case.next_call_plan is not None
+            decision = decision_from_plan(self.case)
+            if decision is not None:
+                self._emit("Using validated post-call plan")
+                self.case.known_facts["_active_call_plan"] = (
+                    self.case.next_call_plan.model_dump(mode="json")
+                    if self.case.next_call_plan
+                    else {}
+                )
+                self.case.next_call_plan = None
+                persist_context(self.case)
+            else:
+                if had_plan:
+                    self._emit("Rejected invalid post-call plan; using policy fallback")
+                    self.case.next_call_plan = None
+                decision = decide(self.case, max_parallel=self.max_parallel)
             self._emit(f"Decision: [bold]{decision.action}[/bold] — {decision.reason}")
             self.case.log("navigator", "decide", f"{decision.action}: {decision.reason}")
 
@@ -434,19 +531,25 @@ class World:
                 ):
                     # Parallel only in simulate mode; LLM mode stays sequential
                     # to avoid OpenAI rate-limit bursts.
-                    if self.simulate:
+                    if self.simulate and not self.live_voice:
                         self._emit("Fan-out: suppliers ∥ clinic")
                         import asyncio
 
                         await asyncio.gather(self.talk_suppliers(ids), self.talk_clinic())
                     else:
-                        self._emit("Sequential LLM wave: suppliers then clinic")
-                        await self.talk_suppliers(ids)
-                        await self.talk_clinic()
+                        if self.live_voice:
+                            self._emit("Live clinic first; planner will choose the next call")
+                            await self.talk_clinic()
+                        else:
+                            self._emit("Sequential wave: suppliers then clinic")
+                            await self.talk_suppliers(ids)
+                            await self.talk_clinic()
                 else:
                     await self.talk_suppliers(ids)
             elif decision.action == "dispatch_pcp_chase":
                 await self.talk_clinic()
+            elif decision.action == "call_medicare":
+                await self.talk_medicare()
             elif decision.action == "request_handoff":
                 sid = (decision.supplier_ids or [None])[0]
                 self.handoff(sid)
@@ -456,12 +559,20 @@ class World:
             elif decision.action == "notify_patient":
                 chosen = self.case.get_supplier(self.case.selected_supplier_id or "")
                 name = chosen.name if chosen else "the supplier"
+                active_plan = self.case.known_facts.get("_active_call_plan")
+                planned_facts = (
+                    list(active_plan.get("facts_to_share") or [])
+                    if isinstance(active_plan, dict)
+                    else []
+                )
                 intent = (
                     f"Notify patient: Dr. Chen's written order is ready and {name} will deliver "
                     f"a standard manual wheelchair. Explain Original Medicare Part B ~20% coinsurance "
                     f"(no Medigap). Delivery timing: {self.case.delivery.scheduled_for}."
                 )
-                if self.simulate:
+                if self.live_voice and planned_facts:
+                    msg = "Hi Eleanor, I followed up for you. " + " ".join(planned_facts)
+                elif self.simulate or self.live_voice:
                     msg = (
                         f"Hi Eleanor — Dr. Chen's written order is ready and {name} will deliver "
                         f"your standard manual wheelchair. Under Original Medicare Part B with no "
@@ -484,6 +595,8 @@ class World:
                 break
 
             self._print_board()
+            self.case.known_facts.pop("_active_call_plan", None)
+            persist_context(self.case)
 
         self.save()
         return self.case

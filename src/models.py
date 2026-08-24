@@ -138,6 +138,39 @@ class EventLogEntry(BaseModel):
     detail: str
 
 
+PlannerAction = Literal[
+    "call_clinic",
+    "call_supplier",
+    "call_patient",
+    "call_medicare",
+    "handoff",
+    "complete",
+    "escalate",
+    "none",
+]
+
+
+class CallMemoryRecord(BaseModel):
+    call_id: str
+    at: str = Field(default_factory=utc_now)
+    party_id: str
+    party_name: str
+    call_type: Literal["supplier", "clinic", "patient", "medicare"]
+    summary: str
+    verified_facts: list[str] = Field(default_factory=list)
+    outcome: str = "unknown"
+
+
+class CallPlan(BaseModel):
+    action: PlannerAction = "none"
+    target_id: str | None = None
+    target_name: str | None = None
+    goal: str = ""
+    facts_to_share: list[str] = Field(default_factory=list)
+    questions: list[str] = Field(default_factory=list)
+    reason: str = ""
+
+
 class CaseState(BaseModel):
     case_id: str
     goal: str
@@ -154,6 +187,8 @@ class CaseState(BaseModel):
     event_log: list[EventLogEntry] = Field(default_factory=list)
     known_facts: dict[str, Any] = Field(default_factory=dict)
     coordinator_context: list[str] = Field(default_factory=list)
+    call_memory: list[CallMemoryRecord] = Field(default_factory=list)
+    next_call_plan: CallPlan | None = None
 
     def log(self, actor: str, action: str, detail: str) -> None:
         self.event_log.append(EventLogEntry(actor=actor, action=action, detail=detail))

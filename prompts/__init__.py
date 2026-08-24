@@ -1,4 +1,4 @@
-"""One persona (.md) + one knowledge bank (.json) per party under prompts/."""
+"""One folder per party type: navigator, patient, clinic, medicare, suppliers."""
 
 from prompts.loader import (
     PARTY_IDS,

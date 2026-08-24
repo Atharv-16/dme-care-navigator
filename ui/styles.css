@@ -26,6 +26,8 @@ button {
 button:hover { background: #2c3b4f; }
 button:disabled { opacity: 0.4; cursor: default; }
 #play { background: #1d4ed8; border-color: #2563eb; }
+#restart { background: #7f1d1d; border-color: #b91c1c; }
+#restart:hover { background: #991b1b; }
 .muted { color: var(--muted); font-size: 0.8rem; }
 .board {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem;
@@ -66,7 +68,133 @@ button:disabled { opacity: 0.4; cursor: default; }
 .log { list-style: none; margin: 0; padding: 0.5rem 1.5rem 2rem; max-height: 28vh; overflow: auto; }
 .log li { font-size: 0.82rem; color: var(--muted); padding: 0.25rem 0; border-bottom: 1px solid #1c2630; }
 .log li.active { color: var(--text); }
+.typebox { display: flex; gap: 0.5rem; padding: 0 1.5rem 2rem; }
+.typebox input {
+  flex: 1; background: #121920; color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 0.55rem 0.8rem; font-size: 0.95rem;
+}
+.live-page header a { color: var(--muted); }
+.live-status { padding: 1rem 1.5rem 0; }
+.live-status .scene { margin-bottom: 0.75rem; color: var(--text); }
+.mic-panel {
+  max-width: 760px; padding: 0.85rem 1rem; background: #121920;
+  border: 1px solid var(--line); border-radius: 12px;
+}
+.mic-label {
+  display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem;
+  color: var(--muted); font-size: 0.78rem;
+}
+#meterReadout { color: var(--text); }
+.mic-feedback { display: flex; align-items: center; gap: 0.65rem; }
+.turn-state {
+  display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.16rem 0.48rem;
+  border: 1px solid #425165; border-radius: 999px; color: var(--muted);
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase;
+}
+.turn-state::before {
+  width: 7px; height: 7px; border-radius: 50%; background: #64748b; content: "";
+}
+.turn-state.speaking { color: #dbeafe; border-color: #3b82f6; }
+.turn-state.speaking::before { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+.turn-state.sent {
+  color: #dcfce7; border-color: #22c55e; animation: turn-ping 650ms ease-out;
+}
+.turn-state.sent::before { background: #22c55e; box-shadow: 0 0 11px #22c55e; }
+@keyframes turn-ping {
+  0% { box-shadow: 0 0 0 0 #22c55eaa; background: #14532d; }
+  100% { box-shadow: 0 0 0 12px transparent; background: transparent; }
+}
+.meter-track {
+  position: relative; height: 16px; overflow: hidden; background: #26313d;
+  border-radius: 999px; box-shadow: inset 0 0 0 1px #344252;
+}
+.meter-fill {
+  width: 0; height: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, #22c55e 0 65%, #fbbf24 82%, #ef4444 100%);
+  transition: width 55ms linear;
+}
+.meter-threshold {
+  position: absolute; top: 0; bottom: 0; left: 14%; width: 2px; background: #ffffffb8;
+}
+.mic-panel.capturing { border-color: #22c55e88; }
+.mic-panel.no-signal { border-color: #ef444488; }
+
+.analysis-panel {
+  display: flex; align-items: center; gap: 0.8rem; margin: 0.75rem 1.5rem 0;
+  padding: 0.7rem 0.9rem; background: #121920; border: 1px solid #334155;
+  border-radius: 12px;
+}
+.analysis-panel[hidden] { display: none; }
+.analysis-label {
+  color: var(--muted); font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.analysis-tags { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.analysis-tag {
+  padding: 0.2rem 0.55rem; border: 1px solid #475569; border-radius: 999px;
+  color: #cbd5e1; font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 0.04em; text-transform: uppercase;
+}
+.analysis-tag.waiting { color: #cbd5e1; animation: analysis-pulse 1.2s infinite; }
+.analysis-tag.sent { color: #dbeafe; border-color: #3b82f6; background: #1e3a5f; }
+.analysis-tag.running {
+  color: #e0f2fe; border-color: #38bdf8; background: #0c4a6e;
+  animation: analysis-pulse 1.2s infinite;
+}
+.analysis-tag.retry { color: #fef3c7; border-color: #f59e0b; background: #5b3a0a; }
+.analysis-tag.delay { color: #ffedd5; border-color: #f97316; background: #7c2d12; }
+.analysis-tag.fallback { color: #f3e8ff; border-color: #a855f7; background: #581c87; }
+.analysis-tag.received { color: #dcfce7; border-color: #22c55e; background: #14532d; }
+.analysis-tag.failed { color: #fee2e2; border-color: #ef4444; background: #7f1d1d; }
+@keyframes analysis-pulse { 50% { opacity: 0.48; } }
+
+.party-graph {
+  margin: 0 1.5rem 2rem; padding: 1rem 1.15rem 0.8rem; background: #121920;
+  border: 1px solid var(--line); border-radius: 16px;
+}
+.graph-heading {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem;
+}
+.graph-heading h2 { margin: 0.15rem 0 0; font-size: 1.05rem; }
+#activePartyName { margin: 0; color: #86efac; font-size: 0.85rem; text-align: right; }
+.party-graph svg { display: block; width: 100%; max-height: 360px; }
+.graph-edges line {
+  stroke: #344252; stroke-width: 4; stroke-linecap: round;
+}
+.graph-node circle {
+  fill: var(--card); stroke: #425165; stroke-width: 4;
+  transition: fill 180ms, stroke 180ms, stroke-width 180ms, filter 180ms;
+}
+.graph-node .node-title { fill: var(--text); font-size: 22px; font-weight: 700; }
+.graph-node .node-subtitle { fill: var(--muted); font-size: 14px; }
+.graph-node.navigator circle { stroke: var(--nav); }
+.graph-node.clinic circle { stroke: var(--clinic); }
+.graph-node.patient circle { stroke: var(--eleanor); }
+.graph-node.medicare circle { stroke: var(--medicare); }
+.graph-node.supplier circle { stroke: var(--supplier); }
+.graph-node:not(.active) { opacity: 0.62; }
+.graph-node.active { opacity: 1; }
+.graph-node.active circle {
+  fill: #203147; stroke: #f8fafc; stroke-width: 7;
+  filter: drop-shadow(0 0 16px #3b9effaa);
+}
+.graph-node.active.clinic circle { filter: drop-shadow(0 0 16px #c084fcaa); }
+.graph-node.active.patient circle { filter: drop-shadow(0 0 16px #fb7185aa); }
+.graph-node.active.medicare circle { filter: drop-shadow(0 0 16px #fbbf24aa); }
+.graph-node.active.supplier circle { filter: drop-shadow(0 0 16px #34d399aa); }
+.graph-legend {
+  display: flex; justify-content: center; gap: 1.5rem; color: var(--muted);
+  font-size: 0.75rem;
+}
+.legend-dot {
+  display: inline-block; width: 8px; height: 8px; margin-right: 0.3rem;
+  border-radius: 50%;
+}
+.active-dot { background: #f8fafc; }
+.navigator-dot { background: var(--nav); }
 @media (max-width: 960px) {
   .board, .suppliers { grid-template-columns: 1fr 1fr; }
   header { flex-direction: column; align-items: flex-start; }
+  .graph-heading { align-items: flex-start; flex-direction: column; }
+  #activePartyName { text-align: left; }
 }

@@ -38,6 +38,14 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="TTS scripted simulate run (no LLM chat; still uses edge-tts)",
     )
+    p.add_argument(
+        "--live-voice",
+        action="store_true",
+        help=(
+            "Impersonate each party the navigator calls in the browser "
+            "(Gemini Live native audio)"
+        ),
+    )
     p.add_argument("--max-parallel", type=int, default=None)
     return p.parse_args()
 
@@ -69,7 +77,8 @@ async def _ollama_ready() -> tuple[bool, str]:
 
 async def async_main() -> int:
     args = parse_args()
-    use_llm = args.llm or (args.voice and not args.voice_only_scripted)
+    live_voice = args.live_voice
+    use_llm = args.llm or live_voice or (args.voice and not args.voice_only_scripted)
     simulate = not use_llm
     voice = args.voice or args.voice_only_scripted
     provider = os.getenv("LLM_PROVIDER", "ollama").lower()
@@ -91,11 +100,11 @@ async def async_main() -> int:
             )
             return 2
         console.print(
-            f"[dim]Gemini {os.getenv('GEMINI_MODEL', 'gemini-flash-lite-latest')} "
+            f"[dim]Gemini {os.getenv('GEMINI_MODEL', 'gemini-flash-latest')} "
             "(free tier, paced)[/dim]"
         )
 
-    world = World.load(simulate=simulate, voice=voice)
+    world = World.load(simulate=simulate, voice=voice, live_voice=live_voice)
     if args.max_parallel:
         world.max_parallel = args.max_parallel
 
@@ -112,6 +121,8 @@ async def async_main() -> int:
     bits.append("SIMULATE" if simulate else f"LLM({provider})")
     if voice:
         bits.append("VOICE/edge-tts")
+    if live_voice:
+        bits.append("LIVE-VOICE/browser")
     console.print(f"[yellow]Mode: {' + '.join(bits)}[/yellow]")
     final = await world.run()
 

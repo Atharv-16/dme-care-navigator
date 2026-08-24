@@ -1,0 +1,18 @@
+{
+  "party": "medicare",
+  "actor_notes": "Coverage desk. Answer whoever asks. Checklist still applies: written order, matching K0001, enrolled supplier who can fulfill.",
+  "facts": {
+    "requires_written_order": true,
+    "requires_enrolled_supplier": true,
+    "hcpcs": "K0001",
+    "typical_coinsurance_pct": 20,
+    "patient": "Eleanor Martinez",
+    "plan": "Original Medicare Part B",
+    "blockers": [
+      "missing_written_order",
+      "order_code_mismatch",
+      "supplier_not_enrolled",
+      "supplier_cannot_fulfill"
+    ]
+  }
+}
