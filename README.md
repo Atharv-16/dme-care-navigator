@@ -4,13 +4,6 @@
 
 
 
-https://github.com/user-attachments/assets/abcc81f9-78a1-4b65-b9b2-7d45db325cde
-
-
-
-
-
-
 
 [![Live demo at 2x](demo/live-preview.jpg)](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator-2x.mp4)
 
