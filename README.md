@@ -5,11 +5,11 @@
 
 
 
-[![Live demo](demo/live-preview.jpg)](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator.mp4)
+[![Live demo at 2x](demo/live-preview.jpg)](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator-2x.mp4)
 
 # DME Care Navigator
 
-Live demo, full quality, about 19 minutes. [Play the video](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator.mp4)
+Live demo at 2x, about 9:38, from the 19:16 trim. [Play the video](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator-2x.mp4)
 
 Local **multi-agent** simulation of Medicare DME care coordination for Eleanor's wheelchair case.
 
