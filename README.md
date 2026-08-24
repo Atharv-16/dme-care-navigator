@@ -1,5 +1,9 @@
 # DME Care Navigator
 
+<video src="https://github.com/Atharv-16/dme-care-navigator/releases/download/live-demo/live-navigator-2x.mp4" controls playsinline width="100%"></video>
+
+Live demo at 2x. [Open on GitHub](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator-2x.mp4)
+
 Local **multi-agent** simulation of Medicare DME care coordination for Eleanor’s wheelchair case.
 
 Every party is an in-process agent on a message bus. The default stack is **free**:
