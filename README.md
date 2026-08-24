@@ -1,6 +1,9 @@
 
 
-https://github.com/user-attachments/assets/da00bf07-483b-4529-b11c-50e16d4712b7
+
+
+
+
 
 [![Live demo](demo/live-preview.jpg)](https://github.com/Atharv-16/dme-care-navigator/blob/main/demo/live-navigator.mp4)
 
