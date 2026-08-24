@@ -16,7 +16,7 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="DME Care Navigator — local multi-agent world (Ollama + edge-tts)"
+        description="DME Care Navigator: local multi-agent world (Gemini Live)"
     )
     p.add_argument(
         "--dry-check",
@@ -26,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--llm",
         action="store_true",
-        help="Real LLM dialogue (Ollama, Gemini, or OpenAI via LLM_PROVIDER)",
+        help="Real LLM dialogue (Gemini via LLM_PROVIDER, default gemini)",
     )
     p.add_argument(
         "--voice",
@@ -81,7 +81,7 @@ async def async_main() -> int:
     use_llm = args.llm or live_voice or (args.voice and not args.voice_only_scripted)
     simulate = not use_llm
     voice = args.voice or args.voice_only_scripted
-    provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+    provider = os.getenv("LLM_PROVIDER", "gemini").lower()
 
     if use_llm and provider == "ollama":
         ok, msg = await _ollama_ready()

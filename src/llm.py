@@ -28,7 +28,7 @@ _last_call = 0.0
 
 
 def llm_provider() -> str:
-    return os.getenv("LLM_PROVIDER", "ollama").lower()
+    return os.getenv("LLM_PROVIDER", "gemini").lower()
 
 
 def default_model() -> str:
@@ -50,9 +50,8 @@ def _gemini_key() -> str:
 
 def get_client() -> AsyncOpenAI:
     """
-    Default: Ollama OpenAI-compatible API (free, local).
-    Gemini free tier: LLM_PROVIDER=gemini + GEMINI_API_KEY (Google AI Studio).
-    Optional paid: LLM_PROVIDER=openai + OPENAI_API_KEY.
+    Default: Gemini (LLM_PROVIDER=gemini + GEMINI_API_KEY).
+    Optional: LLM_PROVIDER=ollama or LLM_PROVIDER=openai.
     """
     provider = llm_provider()
     if provider == "openai":

@@ -255,7 +255,7 @@ fetch("/api/timeline")
     $("stats").textContent = `${s.with_audio || 0}/${s.turns || 0} recorded mp3s`;
     if (rec.dialogue) {
       $("rec-note").textContent =
-        `Yes: real Ollama talk (${rec.dialogue.split("(")[0].trim()}) spoken with edge-tts. Play uses those mp3s.`;
+        `Yes: recorded LLM talk (${rec.dialogue.split("(")[0].trim()}) spoken with TTS. Play uses those mp3s.`;
     }
     if (state.queue[0]) show(state.queue[0]);
   })

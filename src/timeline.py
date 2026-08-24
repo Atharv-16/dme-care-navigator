@@ -157,7 +157,7 @@ def build_timeline() -> dict:
         "source": str(BUS_PATH.name),
         "recording": {
             "dialogue": f"{dialogue} (real generated talk, not the scripted lines)",
-            "voice": "edge-tts (mp3s saved during python -m src --llm --voice)",
+            "voice": "saved mp3s from python -m src --llm --voice",
             "note": "This page replays those files. It does not call the LLM again.",
         },
         "scenes": scenes,
