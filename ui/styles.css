@@ -192,6 +192,22 @@ button:disabled { opacity: 0.4; cursor: default; }
 }
 .active-dot { background: #f8fafc; }
 .navigator-dot { background: var(--nav); }
+
+.context-panel {
+  margin: 0 1.5rem 2rem; padding: 1rem 1.15rem 1.1rem; background: #121920;
+  border: 1px solid var(--line); border-radius: 16px;
+}
+.context-heading {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.context-heading h2 { margin: 0.15rem 0 0; font-size: 1.05rem; }
+.context-json {
+  margin: 0; max-height: 28rem; overflow: auto; padding: 0.85rem 1rem;
+  background: #0b1016; border: 1px solid #2a3644; border-radius: 10px;
+  color: #dbeafe; font: 0.78rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap; word-break: break-word;
+}
 @media (max-width: 960px) {
   .board, .suppliers { grid-template-columns: 1fr 1fr; }
   header { flex-direction: column; align-items: flex-start; }

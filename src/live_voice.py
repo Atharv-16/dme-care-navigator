@@ -172,6 +172,7 @@ class LiveVoiceServer:
         self._call_lock = asyncio.Lock()
         self._send_lock = asyncio.Lock()
         self._analysis_state: dict[str, Any] | None = None
+        self._context_state: dict[str, Any] | None = None
         self._ws_server: Any = None
         self._httpd: ThreadingHTTPServer | None = None
         self._http_thread: threading.Thread | None = None
@@ -316,6 +317,13 @@ class LiveVoiceServer:
             self._clients.discard(ws)
 
     async def notify_analysis_status(self, payload: dict[str, Any]) -> None:
+        if payload.get("state") == "context":
+            self._context_state = {
+                "type": "context",
+                "context": payload.get("context") or {},
+            }
+            await self._broadcast(self._context_state)
+            return
         self._analysis_state = {"type": "analysis_status", **payload}
         await self._broadcast(self._analysis_state)
 
@@ -337,6 +345,8 @@ class LiveVoiceServer:
                         "hint": "Waiting for the navigator to place a call.",
                     },
                 )
+            if self._context_state:
+                await self._send(websocket, self._context_state)
             async for raw in websocket:
                 try:
                     message = json.loads(raw)
@@ -361,6 +371,8 @@ class LiveVoiceServer:
                 }
             )
             await self._send(websocket, payload)
+            if self._context_state:
+                await self._send(websocket, self._context_state)
             return
 
         if kind == "answer":

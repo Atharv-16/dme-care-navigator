@@ -151,12 +151,10 @@ def live_context_json(
             for supplier in context["workflow"]["suppliers"]
             if supplier["id"] == target_id
         ]
-        context["memory"] = []
     elif call_type == "clinic":
         patient.pop("plan", None)
         patient.pop("supplemental", None)
         context["workflow"]["suppliers"] = []
-        context["memory"] = []
     elif call_type == "medicare":
         patient.pop("phone", None)
         patient.pop("address", None)
@@ -165,7 +163,37 @@ def live_context_json(
             for supplier in context["workflow"]["suppliers"]
             if supplier["id"] == case.selected_supplier_id
         ]
+    context["memory"] = _role_safe_memory(case, call_type=call_type, target_id=target_id)
     return json.dumps(context, indent=2)
+
+
+def _role_safe_memory(
+    case: CaseState,
+    *,
+    call_type: str,
+    target_id: str,
+) -> list[dict[str, Any]]:
+    """Keep prior-call facts the navigator needs, without leaking other parties' private details."""
+    kept: list[dict[str, Any]] = []
+    for record in case.call_memory[-12:]:
+        if call_type == "clinic" and record.call_type != "clinic":
+            continue
+        if call_type == "supplier" and record.party_id not in {target_id, "clinic"}:
+            continue
+        if call_type == "medicare" and record.call_type not in {
+            "clinic",
+            "supplier",
+            "medicare",
+        }:
+            continue
+        if (
+            call_type == "medicare"
+            and record.call_type == "supplier"
+            and record.party_id != case.selected_supplier_id
+        ):
+            continue
+        kept.append(record.model_dump(mode="json"))
+    return kept
 
 
 def persist_context(case: CaseState) -> Path:
@@ -349,6 +377,52 @@ def _normalize(data: dict[str, Any]) -> dict[str, str]:
     }
 
 
+def _sanitize_analysis_payload(raw: Any) -> Any:
+    """Keep a post-call update even when the model invents a non-schema status."""
+    if not isinstance(raw, dict):
+        return raw
+    payload = dict(raw)
+    patch = dict(payload.get("state_patch") or {})
+    status = patch.get("order_status")
+    if isinstance(status, str):
+        key = re.sub(r"[^a-z0-9]+", "_", status.lower()).strip("_")
+        received_aliases = {
+            "signed",
+            "ready",
+            "ready_tomorrow",
+            "ready_today",
+            "collect",
+            "pickup",
+            "available",
+            "order_ready",
+        }
+        allowed = {
+            "verbal_only",
+            "requested",
+            "in_queue",
+            "received",
+            "rejected_wrong",
+            "unknown",
+        }
+        if key in received_aliases:
+            patch["order_status"] = "received"
+        elif key not in allowed:
+            patch["order_status"] = None
+    order = patch.get("order")
+    if isinstance(order, str):
+        if re.search(r"sign|ready|collect|true", order, re.I):
+            patch["order"] = {
+                "signed": True,
+                "matches_request": True,
+                "hcpcs": "K0001",
+                "source": "clinic",
+            }
+        else:
+            patch["order"] = None
+    payload["state_patch"] = patch
+    return payload
+
+
 def _clinic_confirmed_order_ready(transcript: list[dict[str, str]]) -> bool:
     """Recognize explicit clinic readiness so routing never depends on an LLM guess."""
     ready: bool | None = None
@@ -365,7 +439,8 @@ def _clinic_confirmed_order_ready(transcript: list[dict[str, str]]) -> bool:
             continue
         if re.search(
             r"\bready\s+(to\s+(collect|pick\s*up)|for\s+(collection|pickup))\b"
-            r"|\b(signed\s+)?(written\s+)?order\s+(is|'s)\s+ready\b"
+            r"|\b(signed\s+)?(written\s+)?orders?\s+(is|are|'s)\s+ready\b"
+            r"|\bhave\s+(the\s+)?orders?\s+ready\b"
             r"|\b(now|already)\s+ready\b",
             text,
         ):
@@ -471,7 +546,7 @@ async def analyze_call(
                 continue
             await notify("failed", error=type(exc).__name__, model=model)
             raise
-    update = PostCallUpdate.model_validate(raw)
+    update = PostCallUpdate.model_validate(_sanitize_analysis_payload(raw))
     if call_type == "clinic" and _clinic_confirmed_order_ready(transcript):
         update.outcome = "received"
         update.summary = (
@@ -519,6 +594,7 @@ async def analyze_call(
     )
     append_coordinator_context(case, conclusion)
     persist_context(case)
+    await notify("context", context=canonical_context(case))
     return update.model_dump(mode="json")
 
 

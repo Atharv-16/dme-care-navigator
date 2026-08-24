@@ -17,6 +17,8 @@ const activePartyName = document.getElementById("activePartyName");
 const partyNodes = [...document.querySelectorAll("[data-party-node]")];
 const analysisPanel = document.getElementById("analysisPanel");
 const analysisTags = document.getElementById("analysisTags");
+const contextJson = document.getElementById("contextJson");
+const contextUpdated = document.getElementById("contextUpdated");
 
 const WS_URL = `ws://${location.hostname}:8767`;
 const INPUT_RATE = 16000;
@@ -83,6 +85,11 @@ function removeAnalysisTags(...kinds) {
       .querySelectorAll(`[data-analysis-kind="${kind}"]`)
       .forEach((node) => node.remove());
   }
+}
+
+function showContext(context) {
+  contextJson.textContent = JSON.stringify(context || {}, null, 2);
+  contextUpdated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
 }
 
 function partyCategory(role) {
@@ -292,6 +299,11 @@ async function onMessage(message) {
       }
       break;
     }
+
+    case "context":
+      showContext(message.context);
+      setStatus("Context JSON updated after analysis.");
+      break;
 
     case "ended":
       ringing = false;

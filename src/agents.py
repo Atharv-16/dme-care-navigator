@@ -14,6 +14,7 @@ from src.coordinator import (
     conclusion_from_supplier_call,
     json_turn,
     live_context_json,
+    _clinic_confirmed_order_ready,
 )
 from src.models import CaseState, SupplierRecord
 
@@ -303,21 +304,41 @@ class ClinicAgent(BaseAgent):
         if self.live_server:
             from src.live_voice import CallSpec
 
+            prior_clinic = [
+                record
+                for record in self.case.call_memory
+                if record.call_type == "clinic"
+            ]
+            facts_to_share = [
+                f"Patient: {self.case.patient.name}",
+                f"Date of birth: {self.case.patient.dob}",
+                f"Requested equipment: {self.case.equipment.hcpcs}",
+                f"Known order status: {self.case.pcp.order_status}",
+            ]
+            questions = [
+                "Is the signed written order ready?",
+                "If not, what is its status and when should we follow up?",
+            ]
+            if prior_clinic:
+                latest = prior_clinic[-1]
+                facts_to_share.extend(latest.verified_facts)
+                facts_to_share.append(f"Previous clinic call: {latest.summary}")
+                questions = [
+                    "This is a callback. Confirm the previous collection plan from memory.",
+                    "Do not say you do not recall that earlier clinic call.",
+                ]
             context = live_context_json(
                 self.case,
                 target_id="clinic",
                 target_name=self.case.pcp.clinic,
                 call_type="clinic",
-                goal="Confirm whether the signed K0001 written order is ready.",
-                facts_to_share=[
-                    f"Patient: {self.case.patient.name}",
-                    f"Date of birth: {self.case.patient.dob}",
-                    f"Requested equipment: {self.case.equipment.hcpcs}",
-                ],
-                questions=[
-                    "Is the signed written order ready?",
-                    "If not, what is its status and when should we follow up?",
-                ],
+                goal=(
+                    "Callback: confirm the previous collection plan for the signed K0001 order."
+                    if prior_clinic
+                    else "Confirm whether the signed K0001 written order is ready."
+                ),
+                facts_to_share=facts_to_share,
+                questions=questions,
             )
             live = await self.live_server.run_call(
                 CallSpec(
@@ -364,7 +385,31 @@ class ClinicAgent(BaseAgent):
                         ),
                     )
                 except Exception as exc:  # noqa: BLE001
-                    result = self._scripted()
+                    if _clinic_confirmed_order_ready(transcript):
+                        self.touches += 1
+                        result = {
+                            "outcome": "received",
+                            "order_status": "received",
+                            "order": {
+                                "signed": True,
+                                "equipment_text": self.case.equipment.description,
+                                "hcpcs": self.case.equipment.hcpcs,
+                                "matches_request": True,
+                                "source": self.case.pcp.clinic,
+                            },
+                            "summary": "Clinic confirmed the signed order is ready for collection.",
+                        }
+                    else:
+                        result = {
+                            "outcome": "unclear",
+                            "order_status": self.case.pcp.order_status,
+                            "order": (
+                                self.case.pcp.order.model_dump()
+                                if self.case.pcp.order
+                                else None
+                            ),
+                            "summary": "Clinic call captured, but structured analysis failed.",
+                        }
                     append_coordinator_context(
                         self.case,
                         conclusion_from_clinic_call(self.case, result)
