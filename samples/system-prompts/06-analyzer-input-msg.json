@@ -1,0 +1,187 @@
+{
+  "call_type": "clinic",
+  "counterpart": "Sunrise Family Medicine",
+  "timestamp": "2026-08-25T16:02:11+00:00",
+  "context": {
+    "case": {
+      "case_id": "eleanor-martinez-wheelchair",
+      "goal": "Get a standard manual wheelchair (HCPCS K0001) delivered for Eleanor under Original Medicare Part B, with written PCP order + enrolled supplier matched.",
+      "status": "in_progress",
+      "patient": {
+        "name": "Eleanor Martinez",
+        "dob": "1954-03-12",
+        "phone": "(312) 555-0190",
+        "address": "1420 N Cleveland Ave, Chicago, IL 60610",
+        "city": "Chicago, IL",
+        "plan": "Original Medicare Part B",
+        "supplemental": false
+      },
+      "request": {
+        "hcpcs": "K0001",
+        "description": "Standard manual wheelchair"
+      },
+      "clinic": {
+        "name": "Sunrise Family Medicine",
+        "doctor": "Dr. Sarah Chen",
+        "phone": "(312) 555-0198"
+      }
+    },
+    "workflow": {
+      "order_status": "verbal_only",
+      "order": null,
+      "selected_supplier_id": null,
+      "delivery": {
+        "status": "not_scheduled",
+        "scheduled_for": null,
+        "notes": null
+      },
+      "patient_notified": false,
+      "suppliers": [
+        {
+          "id": "sup_001",
+          "name": "Lakeshore Home Medical Equipment",
+          "phone": "(312) 555-0142",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_002",
+          "name": "Windy City Mobility & DME",
+          "phone": "(312) 555-0177",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_003",
+          "name": "Prairie State Medical Supply",
+          "phone": "(773) 555-0211",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_004",
+          "name": "Northside CarePlus Equipment",
+          "phone": "(773) 555-0288",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_005",
+          "name": "ChicagoLand Durable Medical",
+          "phone": "(312) 555-0301",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_006",
+          "name": "Roosevelt Medical Supply Co",
+          "phone": "(312) 555-0319",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_007",
+          "name": "Halsted Home Health Supply",
+          "phone": "(773) 555-0356",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_008",
+          "name": "Midwest Mobility Solutions",
+          "phone": "(847) 555-0402",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_009",
+          "name": "Belmont Medical Equipment",
+          "phone": "(773) 555-0447",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_010",
+          "name": "Lincoln Park DME Services",
+          "phone": "(312) 555-0468",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_011",
+          "name": "South Loop Medical Supply",
+          "phone": "(312) 555-0490",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        },
+        {
+          "id": "sup_012",
+          "name": "Evanston Home Medical",
+          "phone": "(847) 555-0533",
+          "status": "not_contacted",
+          "taking_new_medicare": null,
+          "has_k0001": null,
+          "serves_area": null,
+          "delivery_eta_days": null
+        }
+      ]
+    },
+    "memory": [],
+    "current_call": null
+  },
+  "transcript": [
+    {
+      "speaker": "clinic",
+      "text": "Sunrise Family Medicine, how can I help you?"
+    },
+    {
+      "speaker": "navigator",
+      "text": "Hi, this is a care coordinator calling for Eleanor Martinez, date of birth March 12, 1954. I'm checking whether the signed written order for a standard manual wheelchair is ready for me to collect."
+    },
+    {
+      "speaker": "clinic",
+      "text": "Let me look. That K0001 order was never routed. I put it in Dr. Chen's signature queue. It is not signed yet."
+    },
+    {
+      "speaker": "navigator",
+      "text": "Thank you. I'll call back for the signed copy. Goodbye."
+    },
+    {
+      "speaker": "clinic",
+      "text": "Sounds good. Bye."
+    }
+  ]
+}
