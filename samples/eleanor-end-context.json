@@ -1,0 +1,248 @@
+{
+  "case": {
+    "case_id": "eleanor-martinez-wheelchair",
+    "goal": "Get a standard manual wheelchair (HCPCS K0001) delivered for Eleanor under Original Medicare Part B, with written PCP order + enrolled supplier matched.",
+    "status": "completed",
+    "patient": {
+      "name": "Eleanor Martinez",
+      "dob": "1954-03-12",
+      "phone": "(312) 555-0190",
+      "address": "1420 N Cleveland Ave, Chicago, IL 60610",
+      "city": "Chicago, IL",
+      "plan": "Original Medicare Part B",
+      "supplemental": false
+    },
+    "request": {
+      "hcpcs": "K0001",
+      "description": "Standard manual wheelchair"
+    },
+    "clinic": {
+      "name": "Sunrise Family Medicine",
+      "doctor": "Dr. Sarah Chen",
+      "phone": "(312) 555-0198"
+    }
+  },
+  "workflow": {
+    "order_status": "received",
+    "order": {
+      "signed": true,
+      "signed_at": "2026-08-25T18:40:00+00:00",
+      "equipment_text": "standard manual wheelchair",
+      "hcpcs": "K0001",
+      "matches_request": true,
+      "source": "Sunrise Family Medicine"
+    },
+    "selected_supplier_id": "sup_010",
+    "delivery": {
+      "status": "scheduled",
+      "scheduled_for": "~3 business days after order sent",
+      "notes": "Matched written order to Lincoln Park DME Services"
+    },
+    "patient_notified": true,
+    "suppliers": [
+      {
+        "id": "sup_001",
+        "name": "Lakeshore Home Medical Equipment",
+        "phone": "(312) 555-0142",
+        "status": "rejected",
+        "taking_new_medicare": false,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_002",
+        "name": "Windy City Mobility & DME",
+        "phone": "(312) 555-0177",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_003",
+        "name": "Prairie State Medical Supply",
+        "phone": "(773) 555-0211",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_004",
+        "name": "Northside CarePlus Equipment",
+        "phone": "(773) 555-0288",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_005",
+        "name": "ChicagoLand Durable Medical",
+        "phone": "(312) 555-0301",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_006",
+        "name": "Roosevelt Medical Supply Co",
+        "phone": "(312) 555-0319",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_007",
+        "name": "Halsted Home Health Supply",
+        "phone": "(773) 555-0356",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_008",
+        "name": "Midwest Mobility Solutions",
+        "phone": "(847) 555-0402",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_009",
+        "name": "Belmont Medical Equipment",
+        "phone": "(773) 555-0447",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_010",
+        "name": "Lincoln Park DME Services",
+        "phone": "(312) 555-0468",
+        "status": "selected",
+        "taking_new_medicare": true,
+        "has_k0001": true,
+        "serves_area": true,
+        "delivery_eta_days": 3
+      },
+      {
+        "id": "sup_011",
+        "name": "South Loop Medical Supply",
+        "phone": "(312) 555-0490",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      },
+      {
+        "id": "sup_012",
+        "name": "Evanston Home Medical",
+        "phone": "(847) 555-0533",
+        "status": "not_contacted",
+        "taking_new_medicare": null,
+        "has_k0001": null,
+        "serves_area": null,
+        "delivery_eta_days": null
+      }
+    ]
+  },
+  "memory": [
+    {
+      "call_id": "call_001",
+      "at": "2026-08-25T16:02:11+00:00",
+      "party_id": "clinic",
+      "party_name": "Sunrise Family Medicine",
+      "call_type": "clinic",
+      "summary": "Front desk put the K0001 written order in Dr. Chen's signature queue. Not signed yet.",
+      "verified_facts": [
+        "Written order is in the signature queue",
+        "Order is not signed yet"
+      ],
+      "outcome": "in_queue"
+    },
+    {
+      "call_id": "call_002",
+      "at": "2026-08-25T16:18:04+00:00",
+      "party_id": "sup_001",
+      "party_name": "Lakeshore Home Medical Equipment",
+      "call_type": "supplier",
+      "summary": "Not taking new Medicare patients. Referred Lincoln Park DME Services.",
+      "verified_facts": [
+        "Not taking new Original Medicare patients",
+        "Referral: Lincoln Park DME Services at (312) 555-0468"
+      ],
+      "outcome": "rejected"
+    },
+    {
+      "call_id": "call_003",
+      "at": "2026-08-25T16:31:40+00:00",
+      "party_id": "sup_010",
+      "party_name": "Lincoln Park DME Services",
+      "call_type": "supplier",
+      "summary": "Accepting new Medicare, K0001 in stock, Chicago delivery about 3 business days after the written order.",
+      "verified_facts": [
+        "Taking new Medicare",
+        "K0001 in stock",
+        "Delivers to Chicago",
+        "ETA 3 business days after written order"
+      ],
+      "outcome": "viable"
+    },
+    {
+      "call_id": "call_004",
+      "at": "2026-08-25T18:41:12+00:00",
+      "party_id": "clinic",
+      "party_name": "Sunrise Family Medicine",
+      "call_type": "clinic",
+      "summary": "Dr. Chen signed the K0001 written order. It is ready for collection.",
+      "verified_facts": [
+        "Signed K0001 written order is ready for collection"
+      ],
+      "outcome": "received"
+    },
+    {
+      "call_id": "call_005",
+      "at": "2026-08-25T18:55:03+00:00",
+      "party_id": "medicare",
+      "party_name": "Medicare Part B",
+      "call_type": "medicare",
+      "summary": "Coverage path ready under Part B. Patient responsibility about 20% coinsurance after deductible.",
+      "verified_facts": [
+        "Written order matches K0001",
+        "Selected supplier is enrolled and can fulfill",
+        "Typical coinsurance is 20%"
+      ],
+      "outcome": "acknowledged"
+    },
+    {
+      "call_id": "call_006",
+      "at": "2026-08-25T19:04:22+00:00",
+      "party_id": "patient",
+      "party_name": "Eleanor Martinez",
+      "call_type": "patient",
+      "summary": "Eleanor confirmed she understands delivery timing and the ~20% Part B coinsurance.",
+      "verified_facts": [
+        "Patient understands ~20% coinsurance",
+        "Patient understands Lincoln Park will deliver in about 3 business days"
+      ],
+      "outcome": "acknowledged"
+    }
+  ],
+  "current_call": null
+}
